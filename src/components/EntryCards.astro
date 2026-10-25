@@ -20,6 +20,7 @@ const href = (e: Props['items'][number]) => url(`${e.collection}/${e.id}/`);
         <a class="card" href={href(e)}>
           <span class="meta">
             {formatDate(e.data.date)} · {e.collection === 'labs' ? 'lab' : 'post'}
+            {e.data.draft && <span class="draft"> · DRAFT (local only)</span>}
           </span>
           <h3>{e.data.title}</h3>
           <p>{e.data.summary}</p>
@@ -35,3 +36,9 @@ const href = (e: Props['items'][number]) => url(`${e.collection}/${e.id}/`);
     </div>
   )
 }
+
+<style>
+  .draft {
+    color: var(--amber);
+  }
+</style>

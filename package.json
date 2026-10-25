@@ -7,10 +7,15 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "sync:bytequest": "node scripts/sync-bytequest.mjs"
+    "sync:bytequest": "node scripts/sync-bytequest.mjs",
+    "editor": "node scripts/editor/server.mjs"
   },
   "dependencies": {
     "astro": "^5.13.0",
     "gsap": "^3.13.0"
+  },
+  "devDependencies": {
+    "marked": "^14.1.4",
+    "yaml": "^2.9.1"
   }
 }

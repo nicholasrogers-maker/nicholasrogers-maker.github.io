@@ -10,12 +10,24 @@ npm run dev      # http://localhost:4321
 npm run build    # static site in dist/
 ```
 
-## Where to edit
+## Editing content (the easy way)
+
+```bash
+npm run editor
+```
+
+Opens a local editor at http://127.0.0.1:4400 and a live site preview. From there you can edit your
+profile, links, CV, skills, experience, roadmap and certifications; write labs and posts with templates,
+live preview and image upload (or paste a screenshot); and press **Publish** to push to GitHub.
+New labs and posts start as **drafts**: they show in the local preview but not on the live site until
+you untick "Draft". The editor only runs on your computer and is never deployed.
+
+## Where to edit (by hand)
 
 | What | File |
 | --- | --- |
-| Name, hostname, bio, links, CV, skills, experience | `src/data/profile.ts` |
-| Growth path / roadmap | `src/data/roadmap.ts` |
+| Name, hostname, bio, links, CV, skills, experience | `src/data/profile.json` |
+| Growth path / roadmap | `src/data/roadmap.json` |
 | Certifications (one file each) | `src/content/certs/*.md` |
 | Lab write-ups | `src/content/labs/*.md` |
 | Blog posts, notes, CTF write-ups | `src/content/blog/*.md` |

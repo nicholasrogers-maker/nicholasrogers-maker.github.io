@@ -6,6 +6,14 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 4321
+    },
+    {
+      "name": "editor",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "editor", "--", "--no-open"],
+      "port": 4400,
+      "url": "http://127.0.0.1:4400",
+      "autoPort": false
     }
   ]
 }

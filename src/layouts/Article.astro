@@ -26,6 +26,7 @@ const tools = 'tools' in d ? (d.tools as string[]) : [];
         <span class="cmd">more flash:/{entry.collection}/{entry.id}.md</span>
       </p>
       <a class="back mono" href={url(isLab ? 'labs/' : 'blog/')}>← {isLab ? 'all labs' : 'all posts'}</a>
+      {d.draft && <p class="draft-banner mono">DRAFT: only visible in your local preview. Untick "draft" in the editor to publish it.</p>}
       <h1>{d.title}</h1>
       <p class="lead">{d.summary}</p>
       <div class="meta mono">
@@ -62,6 +63,13 @@ const tools = 'tools' in d ? (d.tools as string[]) : [];
     font-size: 0.8rem;
     color: var(--faint);
     margin-bottom: 1rem;
+  }
+  .draft-banner {
+    font-size: 0.85rem;
+    color: var(--amber);
+    border: 1px dashed var(--amber);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.8rem;
   }
   .body {
     margin-top: 2.5rem;

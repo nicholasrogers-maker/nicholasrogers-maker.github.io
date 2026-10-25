@@ -1,0 +1,76 @@
+{
+  "name": "Your Name",
+  "hostname": "NET-PORTFOLIO",
+  "title": "Aspiring Network Engineer",
+  "tagline": "CCNA candidate · Routing, switching & cyber security",
+  "location": "Your City, Country",
+  "currently": "Studying for CCNA 200-301",
+  "openTo": "Junior network / NOC / helpdesk roles",
+  "bio": [
+    "Write two or three sentences about your background and how you got into networking.",
+    "Say what you enjoy: building labs, troubleshooting, figuring out why packets go where they go.",
+    "Finish with where you are heading: CCNA next, then cyber security."
+  ],
+  "email": "you@example.com",
+  "cvFile": "",
+  "links": [
+    { "id": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/your-profile" },
+    { "id": "github", "label": "GitHub", "url": "https://github.com/your-username" },
+    { "id": "credly", "label": "Credly", "url": "" },
+    { "id": "tryhackme", "label": "TryHackMe", "url": "" },
+    { "id": "hackthebox", "label": "Hack The Box", "url": "" }
+  ],
+  "skills": [
+    {
+      "group": "Routing & Switching",
+      "items": [
+        { "name": "IPv4 subnetting", "status": "up" },
+        { "name": "VLANs & trunking", "status": "learning" },
+        { "name": "Inter-VLAN routing", "status": "learning" },
+        { "name": "STP", "status": "learning" },
+        { "name": "OSPFv2", "status": "planned" },
+        { "name": "IPv6", "status": "planned" }
+      ]
+    },
+    {
+      "group": "Services & Security",
+      "items": [
+        { "name": "DHCP / DNS", "status": "learning" },
+        { "name": "NAT / PAT", "status": "learning" },
+        { "name": "ACLs", "status": "learning" },
+        { "name": "Port security", "status": "planned" },
+        { "name": "Site-to-site VPN", "status": "planned" }
+      ]
+    },
+    {
+      "group": "Tools & Platforms",
+      "items": [
+        { "name": "Cisco Packet Tracer", "status": "up" },
+        { "name": "Wireshark", "status": "learning" },
+        { "name": "Linux CLI", "status": "learning" },
+        { "name": "GNS3 / CML", "status": "planned" },
+        { "name": "Python / Netmiko", "status": "planned" }
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "date": "2026",
+      "facility": "STUDY-5-START",
+      "title": "Started CCNA 200-301 study",
+      "detail": "Cisco Networking Academy / self-study. Replace with your own details."
+    },
+    {
+      "date": "2025",
+      "facility": "JOB-6-ROLE",
+      "title": "Your current or most recent role",
+      "detail": "Company · one line on what you did and any IT/network exposure."
+    },
+    {
+      "date": "2024",
+      "facility": "EDU-6-COMPLETE",
+      "title": "Education or training",
+      "detail": "School / course · subject."
+    }
+  ]
+}
