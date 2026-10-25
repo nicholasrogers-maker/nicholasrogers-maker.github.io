@@ -127,6 +127,21 @@ const summary = {
   paths,
 };
 
+// --if-changed: leave the file alone when only the sync time would change,
+// so days without study don't create empty commits.
+if (args.includes('--if-changed') && fs.existsSync(out)) {
+  try {
+    const { syncedAt, ...prev } = JSON.parse(fs.readFileSync(out, 'utf8'));
+    const { syncedAt: _now, ...next } = summary;
+    if (JSON.stringify(prev) === JSON.stringify(next)) {
+      console.log('Byte Quest: no new progress since the last sync. Nothing written.');
+      process.exit(0);
+    }
+  } catch {
+    // unreadable previous file: just overwrite it
+  }
+}
+
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, JSON.stringify(summary, null, 2) + '\n');
 
