@@ -14,6 +14,8 @@ interface Props {
 const { title, description = `${profile.name}: ${profile.title}. ${profile.tagline}.` } = Astro.props;
 const fullTitle = title ? `${title} · ${profile.name}` : `${profile.name} · ${profile.title}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// First clue of the site CTF, hidden in every page's source.
+const reconTip = "<!-- Recon tip: there's a flag on this site. Well-behaved robots know where not to look. -->";
 ---
 
 <!doctype html>
@@ -39,6 +41,14 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <slot name="head" />
   </head>
   <body>
+    <Fragment set:html={reconTip} />
+    <script is:inline>
+      console.log(
+        '%c👀 Reading the source? Good instinct.%c\nThere is a flag hidden on this site. Open the CLI (press `) and type: ctf',
+        'color:#4ef08a;font:600 14px monospace',
+        'color:#8aa595;font:12px monospace',
+      );
+    </script>
     <a class="skip" href="#main">Skip to content</a>
     <DeviceIcons />
     <slot name="before" />

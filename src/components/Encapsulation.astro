@@ -141,6 +141,7 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
       tl.to(plain, { opacity: 1, duration: 0.3 }, '>');
       hold();
 
+      (root as HTMLElement & { timeline?: gsap.core.Timeline }).timeline = tl; // debugging/testing handle
       let current = -1;
       ScrollTrigger.create({
         trigger: root,

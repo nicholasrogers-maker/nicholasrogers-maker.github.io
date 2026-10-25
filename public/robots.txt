@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# NOC staff only. Shift handover notes are not for the public.
+Disallow: /noc/

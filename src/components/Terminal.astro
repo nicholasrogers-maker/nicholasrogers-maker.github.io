@@ -6,6 +6,8 @@ import { roadmap } from '../data/roadmap';
 import { getCerts, getLabs, getPosts } from '../lib/content';
 import { url } from '../lib/url';
 import { bytequest, showBytequest, featuredPaths, syncedLabel } from '../data/bytequest';
+import { acl, ctf } from '../data/security';
+import { createHash } from 'node:crypto';
 
 const [certs, labs, posts] = await Promise.all([getCerts(), getLabs(), getPosts()]);
 
@@ -50,6 +52,11 @@ const data = {
         url: url('certifications/#training'),
       }
     : null,
+  security: {
+    acl,
+    hints: ctf.hints,
+    flagHash: createHash('sha256').update(ctf.flag).digest('hex'),
+  },
   pages: {
     home: url(),
     about: url('about/'),

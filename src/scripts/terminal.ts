@@ -25,6 +25,11 @@ interface Data {
   posts: Entry[];
   pages: Record<string, string>;
   bytequest: BqData | null;
+  security: {
+    acl: { seq: number; action: string; rule: string; note: string }[];
+    hints: string[];
+    flagHash: string;
+  };
 }
 
 type BqTrack = { id: string; name: string; done: number; total: number; status: 'up' | 'learning' | 'down' };
@@ -440,6 +445,13 @@ export function initTerminal() {
           ...(data.bytequest ? ['  show bytequest          training progress'] : []),
           '  ping linkedin           contact links',
           '  ssh labs                open a page',
+          '',
+          'Security:',
+          '  nmap nick               scan me (open ports = skills)',
+          '  show access-lists       security focus areas',
+          '  show crypto key         contact details, as a key',
+          '  hash sha256 <text>      hash something',
+          '  ctf                     there is a flag hidden on this site...',
         ]);
       },
     },
@@ -447,6 +459,186 @@ export function initTerminal() {
     quit: { help: 'Close the console', run: () => close(), hidden: true },
     logout: { help: 'Close the console', run: () => close(), hidden: true },
     cls: { help: 'Clear the screen', run: () => void (out!.innerHTML = ''), hidden: true },
+  };
+
+  // ---------- security commands
+  const sec = data.security;
+  const store = {
+    get: (k: string) => {
+      try {
+        return localStorage.getItem(k);
+      } catch {
+        return null;
+      }
+    },
+    set: (k: string, v: string) => {
+      try {
+        localStorage.setItem(k, v);
+      } catch {}
+    },
+  };
+  let hintIdx = 0;
+
+  async function sha256(text: string) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  const PORTS = [22, 53, 67, 80, 110, 123, 143, 161, 389, 443, 445, 514, 636, 993, 1812, 3306, 3389, 5060, 8080, 8443];
+
+  Object.assign(commands, {
+    ctf: {
+      help: 'There is a flag hidden on this site',
+      run() {
+        if (store.get('nf-ctf') === 'solved') {
+          say('%CTF-6-STATUS: flag already captured. Nice work. ✓', 'c-ok');
+          return;
+        }
+        lines([
+          'Capture the flag: a flag is hidden somewhere on this site.',
+          '',
+          '  Format : flag{...}',
+          '  Submit : submit flag{...}',
+          '  Stuck? : hint   (up to 4 hints, one at a time)',
+          '',
+          'Everything you need is public. No hacking of real systems required.',
+        ]);
+      },
+    },
+    hint: {
+      help: 'Next CTF hint',
+      run() {
+        const i = Math.min(hintIdx, sec.hints.length - 1);
+        say(`Hint ${i + 1}/${sec.hints.length}: ${sec.hints[i]}`, 'c-warn');
+        hintIdx++;
+      },
+    },
+    submit: {
+      help: 'Submit a CTF flag',
+      argHelp: 'flag{...}',
+      args: () => [],
+      async run(args: string[]) {
+        const guess = args.join(' ').trim();
+        if (!guess) return say('% Incomplete command. Usage: submit flag{...}', 'c-err');
+        if ((await sha256(guess)) !== sec.flagHash) {
+          say('%CTF-4-WRONG: that is not the flag. Keep digging (or type hint).', 'c-err');
+          return;
+        }
+        store.set('nf-ctf', 'solved');
+        const email = data.links.find((l) => l.id === 'email');
+        say(`%CTF-5-FLAG_CAPTURED: correct! ${guess}`, 'c-ok');
+        lines([
+          '',
+          "Lesson: Cisco type 7 is a reversible XOR scramble. On real devices use 'enable secret'",
+          "(type 8/9 hashes) and 'service password-encryption' only as a shoulder-surfing guard.",
+          '',
+        ]);
+        if (email) print(`Recruiting? Mention the flag when you ${link(email.url, 'get in touch')}. I'd love to hear how you found it.`);
+      },
+    },
+    decode: {
+      help: 'Decode text',
+      sub: {
+        base64: {
+          help: 'Decode base64 text',
+          argHelp: 'base64 text',
+          args: () => [],
+          run(args: string[]) {
+            if (!args[0]) return say('% Incomplete command.', 'c-err');
+            try {
+              const bytes = Uint8Array.from(atob(args.join('')), (c) => c.charCodeAt(0));
+              say(new TextDecoder().decode(bytes));
+            } catch {
+              say('% Not valid base64.', 'c-err');
+            }
+          },
+        },
+      },
+    },
+    decrypt: {
+      help: 'Reverse weak password encodings',
+      sub: {
+        type7: {
+          help: "Reverse a Cisco 'password 7' string",
+          argHelp: 'type 7 hash',
+          args: () => [],
+          async run(args: string[]) {
+            const { type7Decode } = await import('../lib/type7');
+            const plain = args[0] ? type7Decode(args[0]) : null;
+            if (!plain) return say('% Not a valid type 7 string (two digits, then hex pairs).', 'c-err');
+            say(`Decoded: ${plain}`, 'c-ok');
+            say('(type 7 is obfuscation, not encryption. Use enable secret instead.)', 'c-dim');
+          },
+        },
+      },
+    },
+    hash: {
+      help: 'Hash some text',
+      sub: {
+        sha256: {
+          help: 'SHA-256 hash of the text',
+          argHelp: 'text',
+          args: () => [],
+          async run(args: string[]) {
+            if (!args.length) return say('% Incomplete command.', 'c-err');
+            say(await sha256(args.join(' ')));
+          },
+        },
+      },
+    },
+    nmap: {
+      help: 'Scan me (ports = skills)',
+      argHelp: 'target',
+      args: () => ['nick'],
+      async run(args: string[]) {
+        const target = args.filter((a) => !a.startsWith('-'))[0] || data.profile.name.split(' ')[0].toLowerCase();
+        const skills = data.skills.flatMap((g) => g.items);
+        lines([`Starting Nmap 7.95 ( https://nmap.org )`, `Nmap scan report for ${target} (203.0.113.10)`, 'Host is up (0.0042s latency).'], 'c-dim');
+        if (!reduceMotion()) await sleep(500);
+        say(`${pad('PORT', 11)}${pad('STATE', 10)}SERVICE`, 'c-dim');
+        for (let i = 0; i < skills.length; i++) {
+          const s = skills[i];
+          const [state, cls] = s.status === 'up' ? ['open', 'c-ok'] : s.status === 'learning' ? ['filtered', 'c-warn'] : ['closed', 'c-dim'];
+          print(`${esc(pad(`${PORTS[i % PORTS.length]}/tcp`, 11))}<span class="${cls}">${pad(state, 10)}</span>${esc(s.name)}`);
+          if (!reduceMotion()) await sleep(60);
+        }
+        say();
+        say('open = comfortable · filtered = learning now · closed = planned', 'c-dim');
+        say(`Nmap done: 1 IP address (1 host up) scanned. Only scan systems you own or have permission to test.`, 'c-dim');
+      },
+    },
+    sudo: {
+      help: 'Run as root',
+      hidden: true,
+      run() {
+        say(`${data.profile.name.split(' ')[0].toLowerCase()} is not in the sudoers file. This incident will be reported.`, 'c-err');
+      },
+    },
+  } satisfies Record<string, Cmd>);
+
+  show['access-lists'] = {
+    help: 'My security focus areas',
+    run() {
+      say('Extended IP access list SECURITY-FOCUS');
+      sec.acl.forEach((a) =>
+        print(`    ${a.seq} <span class="${a.action === 'deny' ? 'c-err' : 'c-ok'}">${a.action}</span> ${esc(pad(a.rule, 24))}<span class="c-dim">! ${esc(a.note)}</span>`),
+      );
+    },
+  };
+  show.crypto = {
+    help: 'Crypto information',
+    sub: {
+      key: {
+        help: 'My public "key" (contact details)',
+        async run() {
+          const p = data.profile;
+          const fp = (await sha256(p.email + p.name)).slice(0, 32).match(/../g)!.join(':');
+          lines([`% Key pair was generated at: ${new Date().getFullYear()}`, `Key name: ${p.hostname}.contact`, ` Key type: RSA KEYS`, ' Key Data:']);
+          data.links.forEach((l) => print(`  ${esc(pad(l.label, 12))}${link(l.url, l.url.replace(/^mailto:/, ''))}`));
+          say(` Fingerprint (SHA-256): ${fp}`, 'c-dim');
+        },
+      },
+    },
   };
 
   // ---------- parser ----------
@@ -570,7 +762,7 @@ export function initTerminal() {
       say('Press RETURN to get started.', 'c-dim');
       say();
       print(
-        `Type <span class="c-ok">?</span> for commands, or try <span class="c-ok">show version</span>, <span class="c-ok">show ip route</span>, <span class="c-ok">ping linkedin</span>.`,
+        `Type <span class="c-ok">?</span> for commands, or try <span class="c-ok">show version</span>, <span class="c-ok">nmap nick</span>, <span class="c-ok">show ip route</span>. There's also a hidden <span class="c-ok">ctf</span>.`,
       );
     }
     input!.focus();

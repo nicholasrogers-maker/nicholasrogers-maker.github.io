@@ -71,4 +71,12 @@ Put `cv.pdf` in `public/` and set `cvFile: 'cv.pdf'` in `profile.ts`.
 
 Press <kbd>`</kbd> or the `>_` button. Abbreviations work like IOS (`sh ip int br`), `?` shows help, Tab completes.
 
-`show version` · `show bytequest [detail|badges]` · `show running-config` · `show certifications` · `show labs` · `show blog` · `show ip route` · `show ip interface brief` · `show interfaces` · `show logging` · `traceroute career` · `ping linkedin` · `ssh labs` · `enable` · `configure terminal` · `reload` · `clear` · `exit`
+Security: `nmap nick` · `show access-lists` · `show crypto key` · `hash sha256 <text>` · `decode base64 <text>` · `decrypt type7 <hash>` · `ctf` / `hint` / `submit flag{...}`
+
+### Site CTF
+
+A flag is hidden on the site. The clue trail: a comment in every page's source → `public/robots.txt`
+→ the unlinked `/noc/` page → a base64 "backup" → a Cisco type 7 password → the flag. The flag and hints live in
+`src/data/security.ts` (only its SHA-256 hash is sent to browsers). Change the flag there to reset the puzzle.
+
+General: `show version` · `show bytequest [detail|badges]` · `show running-config` · `show certifications` · `show labs` · `show blog` · `show ip route` · `show ip interface brief` · `show interfaces` · `show logging` · `traceroute career` · `ping linkedin` · `ssh labs` · `enable` · `configure terminal` · `reload` · `clear` · `exit`

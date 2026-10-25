@@ -1,0 +1,72 @@
+---
+// Part of the site CTF. Not linked from anywhere: found via robots.txt.
+import Base from '../layouts/Base.astro';
+import { profile } from '../data/profile';
+import { ctf } from '../data/security';
+import { type7Encode } from '../lib/type7';
+
+const backup = Buffer.from(`enable password 7 ${type7Encode(ctf.flag, 9)}`).toString('base64');
+---
+
+<Base title="NOC shift handover" description="Internal notes.">
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+  <section class="section">
+    <div class="wrap">
+      <pre class="banner mono">**************************************************************
+*  AUTHORISED ACCESS ONLY. All activity is logged.          *
+*  {profile.hostname.padEnd(14)} NOC  ·  shift handover notes            *
+**************************************************************</pre>
+
+      <h1>Shift handover</h1>
+      <p class="lead">You found the NOC notes. Nice recon. Keep going.</p>
+
+      <ol class="log mono">
+        <li><span class="t">06:00</span> Overnight: 3 alerts, all handled. SSH brute force from 198.51.100.66 blocked by ACL OUTSIDE-IN.</li>
+        <li><span class="t">09:15</span> Rogue DHCP on VLAN 20 traced to a home router someone plugged in. Port shut, DHCP snooping enabled.</li>
+        <li>
+          <span class="t">13:40</span> Core switch config backed up. Encoded the important line so nobody shoulder-surfs it:
+          <code class="blob">{backup}</code>
+        </li>
+        <li><span class="t">14:05</span> Reminder to self: encoding isn't encryption. Neither is whatever Cisco calls "type 7".</li>
+        <li><span class="t">17:30</span> Handover complete. Tools are in the site CLI (press <kbd>`</kbd>), try <code>?</code></li>
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .banner {
+    color: var(--amber);
+    font-size: 0.78rem;
+    overflow-x: auto;
+    margin: 0 0 2rem;
+  }
+  .log {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 0;
+    display: grid;
+    gap: 0.9rem;
+    font-size: 0.88rem;
+  }
+  .log li {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+  }
+  .t {
+    color: var(--green);
+    margin-right: 0.75rem;
+  }
+  .blob {
+    display: block;
+    margin-top: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--bg);
+    border: 1px dashed var(--line-2);
+    border-radius: 4px;
+    color: var(--amber);
+    word-break: break-all;
+  }
+</style>

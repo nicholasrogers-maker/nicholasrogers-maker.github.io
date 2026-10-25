@@ -46,7 +46,7 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
         <text class="pj-alabel" x="0" y="-6">tcp/22</text>
       </g>
     </g>
-    <text class="pj-deny" x="730" y="40" opacity="0">✕ DENIED</text>
+    <text class="pj-deny" x="730" y="16" opacity="0">✕ DENIED</text>
   </svg>
   <figcaption class="pj-caption" aria-hidden="true">
     <span class="pj-at">{stops[0].id}</span>
@@ -142,6 +142,9 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
       .to({}, { duration: 2.6 })
       .to(deny, { opacity: 0, duration: 0.3 })
       .call(() => cap.classList.remove('is-alert'));
+
+    // handle for debugging/testing: lets the timeline be inspected or scrubbed from devtools
+    (fig as HTMLElement & { timeline?: gsap.core.Timeline }).timeline = tl;
 
     // pause when off screen
     new IntersectionObserver(([e]) => (e.isIntersecting ? tl.play() : tl.pause())).observe(fig);

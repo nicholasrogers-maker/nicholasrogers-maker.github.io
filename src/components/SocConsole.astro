@@ -1,0 +1,324 @@
+---
+// Simulated SIEM alert feed. Click an alert to see what it is, how to detect it and how to respond.
+// Without JS (or with reduced motion) it shows a static list of the same alerts.
+import { alerts } from '../data/security';
+
+const mitreUrl = (id: string) => `https://attack.mitre.org/techniques/${id.replace('.', '/')}/`;
+const withUrls = alerts.map((a) => ({ ...a, url: mitreUrl(a.technique) }));
+const first = withUrls[0];
+---
+
+<div class="soc" data-alerts={JSON.stringify(withUrls)}>
+  <div class="soc-head mono">
+    <span class="dot" aria-hidden="true"></span>
+    <span>SIEM · alert feed</span>
+    <span class="sim">simulated</span>
+    <button class="pause" type="button" aria-pressed="false">pause</button>
+  </div>
+  <div class="soc-body">
+    <ol class="feed mono" aria-label="Security alerts">
+      {
+        withUrls.slice(0, 7).map((a, i) => (
+          <li>
+            <button type="button" class={`alert sev-${a.sev}${i === 0 ? ' is-sel' : ''}`} data-i={i}>
+              <span class="time">--:--:--</span>
+              <span class={`sev`}>{a.sev}</span>
+              <span class="sig">{a.sig}</span>
+              <span class="tech">{a.technique}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ol>
+    <aside class="detail" aria-live="polite">
+      <p class="d-tech mono">
+        <a href={first.url} target="_blank" rel="noopener">{first.technique}</a> · <span class="d-tactic">{first.tactic}</span>
+      </p>
+      <h3 class="d-name">{first.techniqueName}</h3>
+      <dl>
+        <dt>What it is</dt>
+        <dd class="d-what">{first.what}</dd>
+        <dt>How I'd detect it</dt>
+        <dd class="d-detect">{first.detect}</dd>
+        <dt>How I'd respond</dt>
+        <dd class="d-respond">{first.respond}</dd>
+      </dl>
+    </aside>
+  </div>
+</div>
+
+<script>
+  type A = {
+    sev: string;
+    sig: string;
+    proto: string;
+    dport: number | null;
+    internalSrc?: boolean;
+    flow?: string;
+    technique: string;
+    techniqueName: string;
+    tactic: string;
+    what: string;
+    detect: string;
+    respond: string;
+    url: string;
+  };
+
+  document.querySelectorAll<HTMLElement>('.soc').forEach((root) => {
+    const all: A[] = JSON.parse(root.dataset.alerts || '[]');
+    const feed = root.querySelector<HTMLOListElement>('.feed')!;
+    const pauseBtn = root.querySelector<HTMLButtonElement>('.pause')!;
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const rnd = (n: number) => Math.floor(Math.random() * n);
+    const ext = () => `${['198.51.100', '203.0.113'][rnd(2)]}.${rnd(250) + 2}`;
+    const int = (net: number) => `10.10.${net}.${rnd(200) + 10}`;
+    const now = () => new Date().toLocaleTimeString('en-GB', { hour12: false });
+    const MAX = 7;
+
+    // which alert object each row shows
+    let rows: A[] = all.slice(0, MAX);
+
+    function flow(a: A) {
+      if (a.flow) return a.flow.replace('{h}', String(rnd(200) + 10));
+      const src = a.internalSrc ? int(20) : ext();
+      const dst = a.dport === 3389 ? int(30) : a.internalSrc ? ext() : '10.10.10.5';
+      return `${a.proto} ${src} → ${dst}${a.dport ? ':' + a.dport : ''}`;
+    }
+
+    function select(a: A, btn?: HTMLElement) {
+      const link = q('.d-tech a') as HTMLAnchorElement;
+      link.href = a.url;
+      link.textContent = a.technique;
+      q('.d-tactic').textContent = a.tactic;
+      q('.d-name').textContent = a.techniqueName;
+      q('.d-what').textContent = a.what;
+      q('.d-detect').textContent = a.detect;
+      q('.d-respond').textContent = a.respond;
+      feed.querySelectorAll('.alert').forEach((b) => b.classList.toggle('is-sel', b === btn));
+    }
+
+    function makeRow(a: A) {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = `alert sev-${a.sev}`;
+      b.innerHTML = `<span class="time"></span><span class="sev"></span><span class="sig"></span><span class="tech"></span><span class="flow"></span>`;
+      b.querySelector('.time')!.textContent = now();
+      b.querySelector('.sev')!.textContent = a.sev;
+      b.querySelector('.sig')!.textContent = a.sig;
+      b.querySelector('.tech')!.textContent = a.technique;
+      b.querySelector('.flow')!.textContent = flow(a);
+      b.addEventListener('click', () => select(a, b));
+      li.append(b);
+      return li;
+    }
+
+    // replace the server-rendered rows with live ones
+    feed.replaceChildren(...rows.map(makeRow));
+    select(rows[0], feed.querySelector('.alert') as HTMLElement);
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      pauseBtn.hidden = true;
+      return;
+    }
+
+    let paused = false;
+    let hovering = false;
+    let visible = true;
+    let next = MAX % all.length;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(root);
+    feed.addEventListener('mouseenter', () => (hovering = true));
+    feed.addEventListener('mouseleave', () => (hovering = false));
+    feed.addEventListener('focusin', () => (hovering = true));
+    feed.addEventListener('focusout', () => (hovering = false));
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'resume' : 'pause';
+      pauseBtn.setAttribute('aria-pressed', String(paused));
+    });
+
+    setInterval(() => {
+      if (paused || hovering || !visible || document.hidden) return;
+      const a = all[next];
+      next = (next + 1) % all.length;
+      const li = makeRow(a);
+      li.classList.add('is-new');
+      feed.prepend(li);
+      while (feed.children.length > MAX) feed.lastElementChild!.remove();
+    }, 2600);
+  });
+</script>
+
+<style>
+  .soc {
+    background: #050806;
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .soc-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.9rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.78rem;
+    color: var(--dim);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red);
+    animation: blink 1.6s steps(1) infinite;
+  }
+  .sim {
+    color: var(--faint);
+    border: 1px solid var(--line-2);
+    border-radius: 99px;
+    padding: 0 0.45rem;
+    font-size: 0.68rem;
+  }
+  .pause {
+    margin-left: auto;
+    font: inherit;
+    color: var(--dim);
+    background: none;
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    padding: 0.1rem 0.5rem;
+    cursor: pointer;
+  }
+  .pause:hover {
+    color: var(--green);
+    border-color: var(--green-dim);
+  }
+  .soc-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+  @media (max-width: 860px) {
+    .soc-body {
+      grid-template-columns: 1fr;
+    }
+  }
+  .feed {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem;
+    min-height: 23rem;
+    font-size: 0.78rem;
+  }
+  .feed :global(li.is-new) {
+    animation: slide-in 0.45s ease-out;
+  }
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+      background: rgba(255, 107, 107, 0.12);
+    }
+  }
+  .feed :global(.alert) {
+    display: grid;
+    grid-template-columns: 4.6rem 4.2rem minmax(0, 1fr) auto;
+    gap: 0.15rem 0.6rem;
+    align-items: baseline;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: var(--text);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 0.45rem 0.55rem;
+    cursor: pointer;
+  }
+  .feed :global(.alert:hover) {
+    background: var(--panel);
+  }
+  .feed :global(.alert.is-sel) {
+    background: var(--panel);
+    border-color: var(--line-2);
+  }
+  .feed :global(.time) {
+    color: var(--faint);
+  }
+  .feed :global(.sev) {
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.68rem;
+  }
+  .feed :global(.sev-high .sev) {
+    color: var(--red);
+  }
+  .feed :global(.sev-medium .sev) {
+    color: var(--amber);
+  }
+  .feed :global(.sev-low .sev) {
+    color: var(--blue);
+  }
+  .feed :global(.sig) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .feed :global(.tech) {
+    color: var(--violet);
+  }
+  .feed :global(.flow) {
+    grid-column: 3 / -1;
+    color: var(--faint);
+    font-size: 0.72rem;
+  }
+  @media (max-width: 560px) {
+    .feed :global(.alert) {
+      grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+    }
+    .feed :global(.time) {
+      display: none;
+    }
+    .feed :global(.flow) {
+      grid-column: 2 / -1;
+    }
+  }
+  .detail {
+    border-left: 1px solid var(--line);
+    padding: 1rem 1.2rem 1.2rem;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 860px) {
+    .detail {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+  .d-tech {
+    font-size: 0.78rem;
+    color: var(--dim);
+    margin: 0 0 0.3rem;
+  }
+  .d-tech a {
+    color: var(--violet);
+  }
+  .d-name {
+    font-size: 1.05rem;
+    margin: 0 0 0.8rem;
+  }
+  dl {
+    margin: 0;
+  }
+  dt {
+    font: 600 0.72rem var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    margin-top: 0.75rem;
+  }
+  dd {
+    margin: 0.2rem 0 0;
+    color: var(--dim);
+  }
+</style>
