@@ -1,55 +1,114 @@
 {
-  "name": "Your Name",
+  "name": "Nick Rogers",
   "hostname": "NET-PORTFOLIO",
-  "title": "Aspiring Network Engineer",
-  "tagline": "CCNA candidate · Routing, switching & cyber security",
-  "location": "Your City, Country",
-  "currently": "Studying for CCNA 200-301",
+  "title": "Aspiring Network Engineer / Cyber Security ",
+  "tagline": "Studying Cyber Security. Chasing the CCNA. Documenting it all here.",
+  "location": "North Wales, UK",
+  "currently": "Studying for CCNA 200-301 and BSc (Honours) Cyber Security",
   "openTo": "Junior network / NOC / helpdesk roles",
   "bio": [
-    "Write two or three sentences about your background and how you got into networking.",
-    "Say what you enjoy: building labs, troubleshooting, figuring out why packets go where they go.",
-    "Finish with where you are heading: CCNA next, then cyber security."
+    "Hi, I’m Nick Rogers, a 37-year-old tech enthusiast with a lifelong curiosity for anything computer-related. If it has a circuit board, a command line or a network cable, I probably want to know how it works.",
+    "By day, I work as an API Support Officer in the travel industry. I help keep the integrations that connect booking systems, suppliers and partners running smoothly, which means troubleshooting requests, reading logs and getting to the root of problems fast.",
+    "Alongside work, I’m studying Cyber Security with The Open University, building a solid foundation in how systems are attacked and how to defend them. Networking is where my real passion lies, though. I’m working towards the Cisco CCNA and love digging into routing, switching and how data actually gets from A to B.",
+    "This site is where I share my projects, labs and the things I learn along the way. Thanks for stopping by!"
   ],
-  "email": "you@example.com",
+  "email": "nicholas.s.rogers@gmail.com",
   "cvFile": "",
   "links": [
-    { "id": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/your-profile" },
-    { "id": "github", "label": "GitHub", "url": "https://github.com/your-username" },
-    { "id": "credly", "label": "Credly", "url": "" },
-    { "id": "tryhackme", "label": "TryHackMe", "url": "" },
-    { "id": "hackthebox", "label": "Hack The Box", "url": "" }
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/your-profile"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "url": "https://github.com/your-username"
+    },
+    {
+      "id": "credly",
+      "label": "Credly",
+      "url": ""
+    }
   ],
   "skills": [
     {
       "group": "Routing & Switching",
       "items": [
-        { "name": "IPv4 subnetting", "status": "up" },
-        { "name": "VLANs & trunking", "status": "learning" },
-        { "name": "Inter-VLAN routing", "status": "learning" },
-        { "name": "STP", "status": "learning" },
-        { "name": "OSPFv2", "status": "planned" },
-        { "name": "IPv6", "status": "planned" }
+        {
+          "name": "IPv4 subnetting",
+          "status": "up"
+        },
+        {
+          "name": "VLANs & trunking",
+          "status": "learning"
+        },
+        {
+          "name": "Inter-VLAN routing",
+          "status": "learning"
+        },
+        {
+          "name": "STP",
+          "status": "learning"
+        },
+        {
+          "name": "OSPFv2",
+          "status": "planned"
+        },
+        {
+          "name": "IPv6",
+          "status": "planned"
+        }
       ]
     },
     {
       "group": "Services & Security",
       "items": [
-        { "name": "DHCP / DNS", "status": "learning" },
-        { "name": "NAT / PAT", "status": "learning" },
-        { "name": "ACLs", "status": "learning" },
-        { "name": "Port security", "status": "planned" },
-        { "name": "Site-to-site VPN", "status": "planned" }
+        {
+          "name": "DHCP / DNS",
+          "status": "learning"
+        },
+        {
+          "name": "NAT / PAT",
+          "status": "learning"
+        },
+        {
+          "name": "ACLs",
+          "status": "learning"
+        },
+        {
+          "name": "Port security",
+          "status": "planned"
+        },
+        {
+          "name": "Site-to-site VPN",
+          "status": "planned"
+        }
       ]
     },
     {
       "group": "Tools & Platforms",
       "items": [
-        { "name": "Cisco Packet Tracer", "status": "up" },
-        { "name": "Wireshark", "status": "learning" },
-        { "name": "Linux CLI", "status": "learning" },
-        { "name": "GNS3 / CML", "status": "planned" },
-        { "name": "Python / Netmiko", "status": "planned" }
+        {
+          "name": "Cisco Packet Tracer",
+          "status": "up"
+        },
+        {
+          "name": "Wireshark",
+          "status": "learning"
+        },
+        {
+          "name": "Linux CLI",
+          "status": "learning"
+        },
+        {
+          "name": "GNS3 / CML",
+          "status": "planned"
+        },
+        {
+          "name": "Python / Netmiko",
+          "status": "planned"
+        }
       ]
     }
   ],

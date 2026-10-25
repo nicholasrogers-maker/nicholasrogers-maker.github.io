@@ -14,12 +14,13 @@ const layers = [
   { n: 1, name: 'Physical' },
 ];
 const steps = [
-  { pdu: 'Data', layers: [7, 6, 5], text: 'The browser creates the request: GET /index.html over HTTPS.' },
+  { pdu: 'Data', layers: [7], text: 'The browser creates the request: GET /index.html over HTTPS.' },
+  { pdu: 'Encrypted data', layers: [6, 5], text: 'TLS encrypts the request with a key agreed in the handshake. From here on, anyone capturing the traffic sees ciphertext, not the URL or any passwords.' },
   { pdu: 'Segment', layers: [4], text: 'TCP adds source and destination ports (49152 → 443), sequence numbers and a checksum.' },
   { pdu: 'Packet', layers: [3], text: 'IP adds source and destination addresses so routers know where it is going.' },
   { pdu: 'Frame', layers: [2], text: 'Ethernet adds MAC addresses for the next hop, plus an FCS trailer to catch errors.' },
-  { pdu: 'Bits', layers: [1], text: 'The NIC turns the frame into signals on the wire: electrical, light or radio.' },
-  { pdu: 'Decapsulation', layers: [1, 2, 3, 4, 5, 6, 7], text: 'At the receiver each layer reads and removes its own header, in reverse, until the data reaches the app.' },
+  { pdu: 'Bits', layers: [1], text: 'The NIC turns the frame into signals on the wire. Someone sniffing this link can read the MACs, IP addresses and port 443, but the request itself stays encrypted.' },
+  { pdu: 'Decapsulation', layers: [1, 2, 3, 4, 5, 6, 7], text: 'At the receiver each layer reads and removes its own header in reverse. Finally TLS decrypts the payload and the web server reads GET /index.html.' },
 ];
 // deterministic "random" bits so the build output is stable
 const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join('').replace(/(.{8})/g, '$1 ').trim();
@@ -51,7 +52,11 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
             <span class="h eth">Ethernet<small>dst MAC · src MAC</small></span>
             <span class="h ip">IP<small>192.168.1.10 → 203.0.113.10</small></span>
             <span class="h tcp">TCP<small>49152 → 443</small></span>
-            <span class="d">Data<small>GET /index.html</small></span>
+            <span class="h tls">TLS<small>record · AES-GCM</small></span>
+            <span class="d">
+              <span class="plain">Data<small>GET /index.html</small></span>
+              <span class="cipher">🔒 Data<small>9f2c 7a1e b04d …</small></span>
+            </span>
             <span class="h fcs">FCS<small>CRC</small></span>
           </div>
           <div class="bits mono" aria-hidden="true">{bits}</div>
@@ -85,7 +90,7 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
     const pduName = q('.pdu-name b');
     const caption = q('.caption');
     const lis = root.querySelectorAll<HTMLElement>('.osi li');
-    const [tcp, ip, eth, fcs, bitsEl] = ['.tcp', '.ip', '.eth', '.fcs', '.bits'].map((s) => q(s));
+    const [tcp, ip, eth, fcs, bitsEl, tls, data, plain, cipher] = ['.tcp', '.ip', '.eth', '.fcs', '.bits', '.tls', '.d', '.plain', '.cipher'].map((s) => q(s));
 
     const setStep = (i: number) => {
       const s = steps[i];
@@ -99,7 +104,12 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
       root.classList.add('is-animated');
       const hidden = { maxWidth: 0, opacity: 0, paddingLeft: 0, paddingRight: 0, borderWidth: 0 };
       const shown = { maxWidth: 260, opacity: 1, paddingLeft: '0.7rem', paddingRight: '0.7rem', borderWidth: 1, duration: 1 };
-      gsap.set([tcp, ip, eth, fcs], hidden);
+      const clear = { backgroundColor: '#d6e7dc', borderColor: '#d6e7dc', color: '#070b09' };
+      const locked = { backgroundColor: '#14231c', borderColor: '#3dd6c6', color: '#4ef08a' };
+      gsap.set([tcp, ip, eth, fcs, tls], hidden);
+      gsap.set(data, clear);
+      gsap.set(plain, { opacity: 1 });
+      gsap.set(cipher, { opacity: 0 });
       gsap.set(bitsEl, { opacity: 0, y: -8 });
       setStep(0);
 
@@ -109,6 +119,12 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
       const mark = () => marks.push(tl.duration() - 0.5);
 
       hold();
+      // TLS: the payload turns into ciphertext
+      tl.to(tls, shown);
+      tl.to(data, { ...locked, duration: 1 }, '<');
+      tl.to(plain, { opacity: 0, duration: 0.5 }, '<');
+      tl.to(cipher, { opacity: 1, duration: 0.5 }, '<0.4');
+      mark(); hold();
       tl.to(tcp, shown); mark(); hold();
       tl.to(ip, shown); mark(); hold();
       tl.to([eth, fcs], shown); mark(); hold();
@@ -118,6 +134,11 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
       tl.to([eth, fcs], { ...hidden, duration: 0.6 });
       tl.to(ip, { ...hidden, duration: 0.6 });
       tl.to(tcp, { ...hidden, duration: 0.6 });
+      // decrypt
+      tl.to(tls, { ...hidden, duration: 0.6 });
+      tl.to(data, { ...clear, duration: 0.6 }, '<');
+      tl.to(cipher, { opacity: 0, duration: 0.3 }, '<');
+      tl.to(plain, { opacity: 1, duration: 0.3 }, '>');
       hold();
 
       let current = -1;
@@ -232,11 +253,26 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
     background: var(--pdu-l4);
     border-color: var(--pdu-l4);
   }
-  .d {
+  .tls {
+    background: #3dd6c6;
+    border-color: #3dd6c6;
+  }
+  /* the payload: shown encrypted by default (the frame as it travels) */
+  .pdu > .d {
     flex: 1;
     min-width: 8rem;
-    background: var(--pdu-data);
-    border-color: var(--pdu-data);
+    display: grid;
+    background: #14231c;
+    border-color: #3dd6c6;
+    color: var(--green);
+  }
+  .d > span {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .d .plain {
+    opacity: 0;
   }
   .bits {
     margin-top: 1rem;
@@ -300,8 +336,8 @@ const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join(''
     .pdu > span {
       padding: 0.6rem 0.45rem;
     }
-    .d {
-      min-width: 3rem;
+    .pdu > .d {
+      min-width: 3.4rem;
     }
     .encap-pin {
       padding-top: 6.5rem;

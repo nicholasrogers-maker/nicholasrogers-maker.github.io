@@ -15,7 +15,8 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
 <figure class="pj" data-stops={JSON.stringify(stops)}>
   <svg viewBox="0 0 960 200" role="img" aria-labelledby="pj-title">
     <title id="pj-title">
-      Animation: a web request travels from a PC through a switch, router, the internet and a firewall to a web server.
+      Animation: a web request travels from a PC through a switch, router, the internet and a firewall to a web server. Then an
+      SSH scan from the internet is blocked by the firewall's access list.
     </title>
     <line x1="70" y1="100" x2="890" y2="100" class="pj-wire"></line>
     <line x1="70" y1="100" x2="890" y2="100" class="pj-wire-flow"></line>
@@ -36,6 +37,16 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
         <rect class="chip data" x="18" y="0" width="15" height="16" rx="2"></rect>
       </g>
     </g>
+    <g class="pj-attack" transform="translate(560 0)" opacity="0">
+      <g transform="translate(0 46)">
+        <rect class="achip" x="-33" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="achip" x="-16" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="achip" x="1" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="achip" x="18" y="0" width="15" height="16" rx="2"></rect>
+        <text class="pj-alabel" x="0" y="-6">tcp/22</text>
+      </g>
+    </g>
+    <text class="pj-deny" x="730" y="40" opacity="0">✕ DENIED</text>
   </svg>
   <figcaption class="pj-caption" aria-hidden="true">
     <span class="pj-at">{stops[0].id}</span>
@@ -47,6 +58,7 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
     <li><i class="ip"></i>IP (L3)</li>
     <li><i class="tcp"></i>TCP (L4)</li>
     <li><i class="data"></i>Data</li>
+    <li><i class="atk"></i>Attack traffic</li>
   </ul>
 </figure>
 
@@ -67,12 +79,24 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const caption = (i: number) => {
-      at.textContent = stops[i].id;
-      layer.textContent = stops[i].layer;
-      text.textContent = stops[i].text;
-      devs.forEach((d, j) => d.classList.toggle('is-active', j === i));
+    const cap = fig.querySelector('.pj-caption')!;
+    const attack = fig.querySelector('.pj-attack')!;
+    const achips = fig.querySelectorAll('.achip');
+    const deny = fig.querySelector('.pj-deny')!;
+    const fwIndex = stops.findIndex((s) => s.id === 'FW');
+    const netIndex = stops.findIndex((s) => s.id === 'INTERNET');
+
+    const setCaption = (who: string, lyr: string, msg: string, active: number, alert = false) => {
+      at.textContent = who;
+      layer.textContent = lyr;
+      text.textContent = msg;
+      cap.classList.toggle('is-alert', alert);
+      devs.forEach((d, j) => {
+        d.classList.toggle('is-active', j === active && !alert);
+        d.classList.toggle('is-deny', j === active && alert);
+      });
     };
+    const caption = (i: number) => setCaption(stops[i].id, stops[i].layer, stops[i].text, i);
 
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, defaults: { ease: 'power1.inOut' } });
     tl.set(packet, { x: stops[0].x, opacity: 1 })
@@ -92,6 +116,32 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
     }
     // decapsulate at the server: Ethernet first, data last
     tl.to([...chips].reverse(), { scaleY: 0, duration: 0.2, stagger: 0.3 }).to({}, { duration: 1.8 }).to(packet, { opacity: 0, duration: 0.2 });
+
+    // ---- second act: an SSH scan from the internet, dropped by the firewall ACL
+    const fwX = stops[fwIndex].x;
+    tl.set(attack, { x: stops[netIndex].x, opacity: 0 })
+      .set(achips, { scaleY: 1, opacity: 1, transformOrigin: '50% 50%' })
+      .call(() =>
+        setCaption('198.51.100.66', 'THREAT', 'A scanner on the internet tries to reach SSH (tcp/22) on the web server, hoping for a weak password.', netIndex, true),
+      )
+      .to(attack, { opacity: 1, duration: 0.3 })
+      .to(attack, { x: fwX - 20, duration: 1.1, ease: 'power1.in' })
+      .call(() =>
+        setCaption(
+          'FW',
+          'DENY',
+          '%SEC-6-IPACCESSLOGP: list OUTSIDE-IN denied tcp 198.51.100.66(51544) -> 203.0.113.10(22), 1 packet. Only HTTPS is allowed in; the scan is dropped.',
+          fwIndex,
+          true,
+        ),
+      )
+      .to(deny, { opacity: 1, duration: 0.15 })
+      .to(attack, { x: fwX - 30, duration: 0.06, repeat: 5, yoyo: true, ease: 'none' })
+      .to(achips, { scaleY: 0, opacity: 0, duration: 0.35, stagger: 0.05 })
+      .to(attack, { opacity: 0, duration: 0.1 })
+      .to({}, { duration: 2.6 })
+      .to(deny, { opacity: 0, duration: 0.3 })
+      .call(() => cap.classList.remove('is-alert'));
 
     // pause when off screen
     new IntersectionObserver(([e]) => (e.isIntersecting ? tl.play() : tl.pause())).observe(fig);
@@ -131,6 +181,35 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
   }
   .pj-dev.is-active {
     color: var(--green);
+  }
+  .pj-dev.is-deny {
+    color: var(--red);
+  }
+  .achip,
+  .pj-legend .atk {
+    fill: var(--red);
+    background: var(--red);
+  }
+  .achip {
+    stroke: var(--bg);
+    stroke-width: 1;
+  }
+  .pj-alabel {
+    fill: var(--red);
+    font: 600 11px var(--mono);
+    text-anchor: middle;
+  }
+  .pj-deny {
+    fill: var(--red);
+    font: 700 14px var(--mono);
+    text-anchor: middle;
+  }
+  .pj-caption.is-alert {
+    border-left-color: var(--red);
+  }
+  .pj-caption.is-alert .pj-at,
+  .pj-caption.is-alert .pj-layer {
+    color: var(--red);
   }
   .pj-name {
     fill: currentColor;
@@ -212,8 +291,12 @@ const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
     .pj-name {
       transform: translateY(14px);
     }
-    .pj-packet > g {
+    .pj-packet > g,
+    .pj-attack > g {
       transform: translate(0, 22px) scale(1.9);
+    }
+    .pj-deny {
+      font-size: 30px;
     }
   }
   .pj-legend i {
