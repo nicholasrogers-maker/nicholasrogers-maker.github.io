@@ -1,0 +1,674 @@
+{
+  "source": "Byte Quest",
+  "syncedAt": "2026-10-25T22:45:50.910Z",
+  "xp": 1675,
+  "level": {
+    "n": 6,
+    "title": "Hacker",
+    "into": 175,
+    "need": 600
+  },
+  "lessons": {
+    "done": 70,
+    "total": 721
+  },
+  "bosses": 4,
+  "streak": {
+    "current": 8,
+    "best": 8,
+    "lastActive": "2026-10-25"
+  },
+  "recent": {
+    "days7": 56,
+    "days30": 70
+  },
+  "badges": {
+    "earned": [
+      {
+        "id": "first",
+        "name": "First Blood",
+        "desc": "Clear your first lesson"
+      },
+      {
+        "id": "ten",
+        "name": "Double Digits",
+        "desc": "Clear 10 lessons"
+      },
+      {
+        "id": "streak3",
+        "name": "On a Roll",
+        "desc": "3-day streak"
+      },
+      {
+        "id": "streak7",
+        "name": "Week Warrior",
+        "desc": "7-day streak"
+      },
+      {
+        "id": "xp500",
+        "name": "Half a K",
+        "desc": "Earn 500 XP"
+      },
+      {
+        "id": "boss",
+        "name": "Boss Slayer",
+        "desc": "Beat a boss lesson"
+      },
+      {
+        "id": "t-cisco",
+        "name": "Packet Pusher",
+        "desc": "Finish CCNA 1 · Foundations"
+      },
+      {
+        "id": "par",
+        "name": "Under Par",
+        "desc": "Finish a lab at or under par"
+      }
+    ],
+    "total": 68
+  },
+  "gym": [
+    {
+      "id": "subnet",
+      "name": "Subnetting",
+      "mastered": 2,
+      "levels": 7
+    },
+    {
+      "id": "osi",
+      "name": "OSI model",
+      "mastered": 4,
+      "levels": 5
+    },
+    {
+      "id": "ports",
+      "name": "Ports and TCP/UDP",
+      "mastered": 4,
+      "levels": 5
+    },
+    {
+      "id": "ipv6",
+      "name": "IPv6 addressing",
+      "mastered": 0,
+      "levels": 5
+    },
+    {
+      "id": "wildcard",
+      "name": "Wildcards and ACLs",
+      "mastered": 0,
+      "levels": 4
+    },
+    {
+      "id": "routing",
+      "name": "Routing decisions",
+      "mastered": 0,
+      "levels": 4
+    },
+    {
+      "id": "stp",
+      "name": "Spanning Tree",
+      "mastered": 0,
+      "levels": 4
+    },
+    {
+      "id": "nat",
+      "name": "NAT and PAT",
+      "mastered": 0,
+      "levels": 3
+    },
+    {
+      "id": "wireless",
+      "name": "Wireless",
+      "mastered": 2,
+      "levels": 4
+    },
+    {
+      "id": "qos",
+      "name": "QoS",
+      "mastered": 0,
+      "levels": 4
+    },
+    {
+      "id": "ospf",
+      "name": "OSPF",
+      "mastered": 0,
+      "levels": 5
+    }
+  ],
+  "paths": [
+    {
+      "id": "ccna",
+      "name": "CCNA",
+      "done": 66,
+      "total": 340,
+      "status": "learning",
+      "tracks": [
+        {
+          "id": "cisco",
+          "name": "CCNA 1 · Foundations",
+          "done": 38,
+          "total": 38,
+          "status": "up"
+        },
+        {
+          "id": "ccna-core",
+          "name": "CCNA Core · OSI, TCP/UDP & Subnetting",
+          "done": 27,
+          "total": 53,
+          "status": "learning"
+        },
+        {
+          "id": "ccna-sw",
+          "name": "CCNA 2 · Switching",
+          "done": 0,
+          "total": 36,
+          "status": "down"
+        },
+        {
+          "id": "ccna-wlan",
+          "name": "CCNA 2b · Wireless",
+          "done": 0,
+          "total": 17,
+          "status": "down"
+        },
+        {
+          "id": "ccna-rt",
+          "name": "CCNA 3 · Routing",
+          "done": 0,
+          "total": 23,
+          "status": "down"
+        },
+        {
+          "id": "ccna-ospf",
+          "name": "CCNA 3b · OSPF",
+          "done": 1,
+          "total": 40,
+          "status": "learning"
+        },
+        {
+          "id": "ccna-svc",
+          "name": "CCNA 4 · Services & Security",
+          "done": 0,
+          "total": 50,
+          "status": "down"
+        },
+        {
+          "id": "ccna-sec",
+          "name": "CCNA 4b · Security Fundamentals",
+          "done": 0,
+          "total": 27,
+          "status": "down"
+        },
+        {
+          "id": "ccna-ts",
+          "name": "CCNA 5 · Troubleshooting",
+          "done": 0,
+          "total": 28,
+          "status": "down"
+        },
+        {
+          "id": "ccna-ops",
+          "name": "CCNA 6 · AI & Operations",
+          "done": 0,
+          "total": 24,
+          "status": "down"
+        },
+        {
+          "id": "ccna-exam",
+          "name": "CCNA Exam Prep",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "done": 2,
+      "total": 123,
+      "status": "learning",
+      "tracks": [
+        {
+          "id": "python",
+          "name": "Python 1 · First steps",
+          "done": 2,
+          "total": 12,
+          "status": "learning"
+        },
+        {
+          "id": "py-flow",
+          "name": "Python 2 · Control flow",
+          "done": 0,
+          "total": 10,
+          "status": "down"
+        },
+        {
+          "id": "pj-guess",
+          "name": "Project · Guess the Number",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "py-data",
+          "name": "Python 3 · Data collections",
+          "done": 0,
+          "total": 11,
+          "status": "down"
+        },
+        {
+          "id": "py-func",
+          "name": "Python 4 · Functions and exceptions",
+          "done": 0,
+          "total": 12,
+          "status": "down"
+        },
+        {
+          "id": "py-str",
+          "name": "Python 5 · Strings and text",
+          "done": 0,
+          "total": 10,
+          "status": "down"
+        },
+        {
+          "id": "pj-netinv",
+          "name": "Project · Network Inventory",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "py-mod",
+          "name": "Python 6 · Modules and packages",
+          "done": 0,
+          "total": 9,
+          "status": "down"
+        },
+        {
+          "id": "pj-logs",
+          "name": "Project · Log Detective",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "py-oop",
+          "name": "Python 7 · Object-oriented Python",
+          "done": 0,
+          "total": 14,
+          "status": "down"
+        },
+        {
+          "id": "pj-adventure",
+          "name": "Project · Text Adventure",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "py-adv",
+          "name": "Python 8 · Advanced techniques",
+          "done": 0,
+          "total": 12,
+          "status": "down"
+        },
+        {
+          "id": "py-test",
+          "name": "Python 9 · Testing and debugging",
+          "done": 0,
+          "total": 7,
+          "status": "down"
+        },
+        {
+          "id": "pj-library",
+          "name": "Capstone · Library Manager",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "py-exam",
+          "name": "Python Exam Prep",
+          "done": 0,
+          "total": 2,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "prog",
+      "name": "Programming",
+      "done": 0,
+      "total": 22,
+      "status": "down",
+      "tracks": [
+        {
+          "id": "java",
+          "name": "Java",
+          "done": 0,
+          "total": 7,
+          "status": "down"
+        },
+        {
+          "id": "javascript",
+          "name": "JavaScript",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sql",
+          "name": "SQL",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "gitbash",
+          "name": "Git & Bash",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "name": "Web Development",
+      "done": 0,
+      "total": 35,
+      "status": "down",
+      "tracks": [
+        {
+          "id": "html",
+          "name": "HTML",
+          "done": 0,
+          "total": 7,
+          "status": "down"
+        },
+        {
+          "id": "css",
+          "name": "CSS",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "json",
+          "name": "JSON",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "html2",
+          "name": "HTML · Accessible",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "css2",
+          "name": "CSS · Responsive",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "webjs",
+          "name": "JavaScript · Web",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "http",
+          "name": "HTTP & APIs",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "linux",
+      "name": "Linux",
+      "done": 0,
+      "total": 44,
+      "status": "down",
+      "tracks": [
+        {
+          "id": "lnx-shell",
+          "name": "Linux 1 · Shell basics",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-text",
+          "name": "Linux 2 · Text and pipes",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-perms",
+          "name": "Linux 3 · Users and permissions",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-svc",
+          "name": "Linux 4 · Processes and services",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-net",
+          "name": "Linux 5 · Networking and SSH",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-bash",
+          "name": "Linux 6 · Bash scripting",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "lnx-ts",
+          "name": "Linux 7 · Break/fix tickets",
+          "done": 0,
+          "total": 8,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "cyber",
+      "name": "Cyber Security",
+      "done": 0,
+      "total": 38,
+      "status": "down",
+      "tracks": [
+        {
+          "id": "sec-found",
+          "name": "Security 1 · Foundations",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "sec-crypto",
+          "name": "Security 2 · Cryptography",
+          "done": 0,
+          "total": 6,
+          "status": "down"
+        },
+        {
+          "id": "sec-net",
+          "name": "Security 3 · Network defense",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sec-ops",
+          "name": "Security 4 · Security operations",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sec-app",
+          "name": "Security 5 · Application security",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sec-gov",
+          "name": "Security 6 · Governance and risk",
+          "done": 0,
+          "total": 3,
+          "status": "down"
+        },
+        {
+          "id": "sec-ts",
+          "name": "Security 7 · Incident drills",
+          "done": 0,
+          "total": 8,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "name": "APIs",
+      "done": 2,
+      "total": 89,
+      "status": "learning",
+      "tracks": [
+        {
+          "id": "api-found",
+          "name": "APIs 1 · Foundations",
+          "done": 2,
+          "total": 11,
+          "status": "learning"
+        },
+        {
+          "id": "api-design",
+          "name": "APIs 2 · Design",
+          "done": 0,
+          "total": 11,
+          "status": "down"
+        },
+        {
+          "id": "api-build",
+          "name": "APIs 3 · Building",
+          "done": 0,
+          "total": 12,
+          "status": "down"
+        },
+        {
+          "id": "api-sec",
+          "name": "APIs 4 · Security",
+          "done": 0,
+          "total": 12,
+          "status": "down"
+        },
+        {
+          "id": "api-int",
+          "name": "APIs 5 · Integrating",
+          "done": 0,
+          "total": 13,
+          "status": "down"
+        },
+        {
+          "id": "api-ops",
+          "name": "APIs 6 · Managing",
+          "done": 0,
+          "total": 9,
+          "status": "down"
+        },
+        {
+          "id": "api-support",
+          "name": "APIs 7 · Support",
+          "done": 0,
+          "total": 11,
+          "status": "down"
+        },
+        {
+          "id": "api-ai",
+          "name": "APIs 8 · APIs and AI",
+          "done": 0,
+          "total": 7,
+          "status": "down"
+        },
+        {
+          "id": "api-exam",
+          "name": "APIs 9 · Exam prep",
+          "done": 0,
+          "total": 3,
+          "status": "down"
+        }
+      ]
+    },
+    {
+      "id": "sysadmin",
+      "name": "System Admin",
+      "done": 0,
+      "total": 30,
+      "status": "down",
+      "tracks": [
+        {
+          "id": "sys-ps",
+          "name": "SysAdmin 1 · PowerShell basics",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sys-ad",
+          "name": "SysAdmin 2 · Active Directory",
+          "done": 0,
+          "total": 5,
+          "status": "down"
+        },
+        {
+          "id": "sys-gpo",
+          "name": "SysAdmin 3 · Group Policy and services",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "sys-linux",
+          "name": "SysAdmin 4 · Linux server operations",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "sys-infra",
+          "name": "SysAdmin 5 · Infrastructure",
+          "done": 0,
+          "total": 4,
+          "status": "down"
+        },
+        {
+          "id": "sys-ts",
+          "name": "SysAdmin 6 · Help-desk tickets",
+          "done": 0,
+          "total": 8,
+          "status": "down"
+        }
+      ]
+    }
+  ]
+}

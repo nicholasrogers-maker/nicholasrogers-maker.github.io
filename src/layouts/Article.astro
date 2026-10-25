@@ -1,0 +1,69 @@
+---
+// Layout for a single lab or blog post.
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import Base from './Base.astro';
+import { profile } from '../data/profile';
+import { roadmap } from '../data/roadmap';
+import { url, formatDate } from '../lib/url';
+
+interface Props {
+  entry: CollectionEntry<'labs'> | CollectionEntry<'blog'>;
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const isLab = entry.collection === 'labs';
+const hop = d.milestone ? roadmap.find((h) => h.id === d.milestone) : undefined;
+const tools = 'tools' in d ? (d.tools as string[]) : [];
+---
+
+<Base title={d.title} description={d.summary}>
+  <article class="section">
+    <div class="wrap">
+      <p class="prompt" aria-hidden="true">
+        <span class="host">{profile.hostname}#</span>
+        <span class="cmd">more flash:/{entry.collection}/{entry.id}.md</span>
+      </p>
+      <a class="back mono" href={url(isLab ? 'labs/' : 'blog/')}>← {isLab ? 'all labs' : 'all posts'}</a>
+      <h1>{d.title}</h1>
+      <p class="lead">{d.summary}</p>
+      <div class="meta mono">
+        <span>{formatDate(d.date)}</span>
+        {tools.length > 0 && <span>tools: {tools.join(', ')}</span>}
+        {hop && <a href={url('certifications/#roadmap')}>roadmap: {hop.name}</a>}
+      </div>
+      {
+        d.tags.length > 0 && (
+          <ul class="tags">
+            {d.tags.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+        )
+      }
+      <div class="prose body">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .back {
+    display: inline-block;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    font-size: 0.8rem;
+    color: var(--faint);
+    margin-bottom: 1rem;
+  }
+  .body {
+    margin-top: 2.5rem;
+  }
+</style>

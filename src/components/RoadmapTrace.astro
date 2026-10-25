@@ -1,0 +1,187 @@
+---
+// Growth path drawn as a traceroute. Each hop links to the labs/posts that prove it.
+import { roadmap } from '../data/roadmap';
+import { getLabs, getPosts } from '../lib/content';
+import { url } from '../lib/url';
+import { showBytequest, hopProgress } from '../data/bytequest';
+
+const [labs, posts] = await Promise.all([getLabs(), getPosts()]);
+const evidence = (id: string) => [
+  ...labs.filter((l) => l.data.milestone === id).map((l) => ({ title: l.data.title, href: url(`labs/${l.id}/`) })),
+  ...posts.filter((p) => p.data.milestone === id).map((p) => ({ title: p.data.title, href: url(`blog/${p.id}/`) })),
+];
+const statusText = { reached: 'reached', current: 'you are here', planned: 'planned' } as const;
+---
+
+<div class="trace">
+  <p class="trace-head mono" aria-hidden="true">
+    Type escape sequence to abort.<br />Tracing the route to CAREER-GOAL
+  </p>
+  <ol class="hops">
+    {
+      roadmap.map((h, i) => {
+        const ev = evidence(h.id);
+        const bq = showBytequest ? hopProgress(h.id) : null;
+        return (
+          <li class={`hop hop-${h.status}`}>
+            <div class="hop-num mono" aria-hidden="true">
+              {i + 1}
+            </div>
+            <div class="hop-body">
+              <div class="hop-top">
+                <h3>{h.name}</h3>
+                <span class={`badge state-${h.status}`}>{statusText[h.status as keyof typeof statusText]}</span>
+                <span class="when mono">{h.when}</span>
+              </div>
+              <p>{h.summary}</p>
+              <ul class="tags">
+                {h.goals.map((g) => (
+                  <li>{g}</li>
+                ))}
+              </ul>
+              {bq && bq.done > 0 && (
+                <a class="bq" href={url('certifications/#training')}>
+                  <span class="mono">Byte Quest</span>
+                  <span class="bq-bar" role="img" aria-label={`${bq.done} of ${bq.total} lessons`}>
+                    <i style={`width:${bq.pct}%`} />
+                  </span>
+                  <span class="mono">
+                    {bq.done}/{bq.total} lessons
+                  </span>
+                </a>
+              )}
+              {ev.length > 0 && (
+                <ul class="evidence">
+                  {ev.map((e) => (
+                    <li>
+                      <a href={e.href}>{e.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        );
+      })
+    }
+  </ol>
+</div>
+
+<style>
+  .trace-head {
+    color: var(--faint);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .hops {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .hop {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 1.75rem;
+  }
+  /* the wire between hops */
+  .hop:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 21px;
+    top: 44px;
+    bottom: 0;
+    width: 2px;
+    background: var(--line-2);
+  }
+  .hop-reached:not(:last-child)::before {
+    background: var(--green-dim);
+  }
+  .hop-num {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid var(--line-2);
+    background: var(--panel);
+    color: var(--faint);
+    font-weight: 600;
+  }
+  .hop-reached .hop-num {
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .hop-current .hop-num {
+    border-color: var(--amber);
+    color: var(--amber);
+    box-shadow: 0 0 0 6px rgba(245, 185, 66, 0.12);
+  }
+  .hop-body {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .hop-current .hop-body {
+    border-color: rgba(245, 185, 66, 0.4);
+  }
+  .hop-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .hop-top h3 {
+    margin: 0;
+  }
+  .when {
+    margin-left: auto;
+    color: var(--faint);
+    font-size: 0.8rem;
+  }
+  .hop-body p {
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+  .bq {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.85rem;
+    font-size: 0.8rem;
+    color: var(--dim);
+    text-decoration: none;
+  }
+  .bq:hover {
+    color: var(--green);
+  }
+  .bq-bar {
+    position: relative;
+    height: 6px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bq-bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    min-width: 2px;
+    background: var(--green);
+  }
+  .evidence {
+    margin: 0.75rem 0 0;
+    padding: 0.6rem 0 0;
+    border-top: 1px dashed var(--line-2);
+    list-style: none;
+    font-size: 0.9rem;
+  }
+  .evidence li::before {
+    content: '↳ ';
+    color: var(--faint);
+  }
+</style>

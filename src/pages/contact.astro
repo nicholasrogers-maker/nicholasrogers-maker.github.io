@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import ShowOutput from '../components/ShowOutput.astro';
+import { profile, activeLinks } from '../data/profile';
+import { url } from '../lib/url';
+
+const ifaces = [{ id: 'email', label: 'Email', url: `mailto:${profile.email}`, text: profile.email }].concat(
+  activeLinks.map((l) => ({ ...l, text: l.url.replace(/^https?:\/\/(www\.)?/, '') })),
+);
+---
+
+<Base title="Contact" description={`Get in touch with ${profile.name}.`}>
+  <ShowOutput cmd="show interfaces | include up" title="Get in touch" as="h1" lead={`${profile.openTo}. The fastest way to reach me is email or LinkedIn.`}>
+    <ul class="ifaces">
+      {
+        ifaces.map((l, i) => (
+          <li class="panel">
+            <p class="mono line">
+              <span class="name">
+                {l.label.replace(/\s+/g, '')}0/{i}
+              </span>{' '}
+              is <span class="up">up</span>, line protocol is <span class="up">up</span>
+            </p>
+            <a href={l.url} target={l.id === 'email' ? undefined : '_blank'} rel="noopener">
+              {l.text}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    {
+      profile.cvFile && (
+        <p class="cv">
+          <a class="btn" href={url(profile.cvFile)} download>
+            copy flash:cv.pdf usb0: (download CV)
+          </a>
+        </p>
+      )
+    }
+  </ShowOutput>
+</Base>
+
+<style>
+  .ifaces {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+  .line {
+    font-size: 0.8rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+  }
+  .name {
+    color: var(--text);
+  }
+  .up {
+    color: var(--green);
+  }
+  .ifaces a {
+    font-size: 1.05rem;
+    word-break: break-all;
+  }
+  .cv {
+    margin-top: 2rem;
+  }
+</style>

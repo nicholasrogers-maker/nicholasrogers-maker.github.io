@@ -1,0 +1,321 @@
+---
+// Site navigation drawn as a network. Each device is a page.
+// Clicking one sends a packet from YOU across the links before the page opens.
+import { url } from '../lib/url';
+
+const nodes = [
+  { id: 'you', label: 'YOU', sub: 'visitor', icon: 'laptop', x: 140, y: 110 },
+  { id: 'r1', label: 'R1-HOME', sub: 'about me', icon: 'router', x: 400, y: 110, lp: 'above', href: url('about/') },
+  { id: 'fw', label: 'FW-SEC', sub: 'security', icon: 'firewall', x: 640, y: 110, href: url('security/') },
+  { id: 'cloud', label: 'CLOUD-CONTACT', sub: 'contact', icon: 'cloud', x: 860, y: 110, href: url('contact/') },
+  { id: 'sw', label: 'SW-CERTS', sub: 'certs & roadmap', icon: 'switch', x: 400, y: 280, lp: 'right', href: url('certifications/') },
+  { id: 'srv', label: 'SRV-LABS', sub: 'labs & projects', icon: 'server', x: 230, y: 420, href: url('labs/') },
+  { id: 'pc', label: 'PC-BLOG', sub: 'notes & blog', icon: 'pc', x: 570, y: 420, href: url('blog/') },
+];
+// [from, to, from-interface, to-interface]
+const links: [string, string, string, string][] = [
+  ['you', 'r1', 'wlan0', 'Gi0/2'],
+  ['r1', 'fw', 'Gi0/1', 'Gi0/0'],
+  ['fw', 'cloud', 'Gi0/1', ''],
+  ['r1', 'sw', 'Gi0/0', 'Gi0/24'],
+  ['sw', 'srv', 'Gi0/1', 'eth0'],
+  ['sw', 'pc', 'Gi0/2', 'eth0'],
+];
+const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+const iconSize = (icon: string) => (icon === 'cloud' ? 96 : 72);
+// where each device's name goes: below (default), above, or to the right
+const labelPos = (n: (typeof nodes)[number], dy: number) => {
+  const lp = 'lp' in n ? n.lp : 'below';
+  if (lp === 'above') return { x: n.x, y: n.y - 66 + dy, 'text-anchor': 'middle' };
+  if (lp === 'right') return { x: n.x + 48, y: n.y - 2 + dy, 'text-anchor': 'start' };
+  return { x: n.x, y: n.y + 58 + dy, 'text-anchor': 'middle' };
+};
+
+// small "link light" positions, a little way along each link from each end
+const lights = links.flatMap(([a, b, ia, ib]) => {
+  const A = byId[a];
+  const B = byId[b];
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const off = 52;
+  return [
+    { x: A.x + ux * off, y: A.y + uy * off, label: ia, lx: A.x + ux * (off + 8) + uy * 14, ly: A.y + uy * (off + 8) - ux * 14 },
+    { x: B.x - ux * off, y: B.y - uy * off, label: ib, lx: B.x - ux * (off + 8) + uy * 14, ly: B.y - uy * (off + 8) - ux * 14 },
+  ];
+});
+---
+
+<div class="topo" data-nodes={JSON.stringify(nodes.map(({ id, x, y }) => ({ id, x, y })))} data-links={JSON.stringify(links.map(([a, b]) => [a, b]))}>
+  <svg viewBox="0 0 1000 520" aria-label="Site map drawn as a network diagram">
+    <g class="links" aria-hidden="true">
+      {links.map(([a, b]) => <line x1={byId[a].x} y1={byId[a].y} x2={byId[b].x} y2={byId[b].y} class="link" />)}
+      {
+        lights.map((l) => (
+          <>
+            <circle cx={l.x} cy={l.y} r="4" class="light" />
+            {l.label && (
+              <text x={l.lx} y={l.ly} class="ifname">
+                {l.label}
+              </text>
+            )}
+          </>
+        ))
+      }
+    </g>
+    <g class="idle" aria-hidden="true"></g>
+    {
+      nodes.map((n) => {
+        const s = iconSize(n.icon);
+        const inner = (
+          <>
+            <circle cx={n.x} cy={n.y} r="54" class="halo" />
+            <use href={`#ic-${n.icon}`} x={n.x - s / 2} y={n.y - s / 2} width={s} height={s} />
+            <text {...labelPos(n, 0)} class="label">
+              {n.label}
+            </text>
+            <text {...labelPos(n, 18)} class="sub">
+              {n.sub}
+            </text>
+          </>
+        );
+        return n.href ? (
+          <a href={n.href} class="node" data-node={n.id} aria-label={`${n.label}: ${n.sub}`}>
+            {inner}
+          </a>
+        ) : (
+          <g class="node is-you" aria-hidden="true">
+            {inner}
+          </g>
+        );
+      })
+    }
+    <g class="packet" aria-hidden="true" opacity="0">
+      <rect x="-11" y="-8" width="22" height="16" rx="3"></rect>
+    </g>
+  </svg>
+
+  <ul class="topo-list">
+    {
+      nodes
+        .filter((n) => n.href)
+        .map((n) => (
+          <li>
+            <a href={n.href}>
+              <svg width="28" height="28" aria-hidden="true">
+                <use href={`#ic-${n.icon}`} />
+              </svg>
+              <span class="mono">{n.label}</span>
+              <span class="sub-text">{n.sub}</span>
+            </a>
+          </li>
+        ))
+    }
+  </ul>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  type N = { id: string; x: number; y: number };
+
+  document.querySelectorAll<HTMLElement>('.topo').forEach((root) => {
+    const nodes: N[] = JSON.parse(root.dataset.nodes || '[]');
+    const links: [string, string][] = JSON.parse(root.dataset.links || '[]');
+    const pos = Object.fromEntries(nodes.map((n) => [n.id, n]));
+    const adj: Record<string, string[]> = {};
+    links.forEach(([a, b]) => {
+      (adj[a] ||= []).push(b);
+      (adj[b] ||= []).push(a);
+    });
+    const packet = root.querySelector<SVGGElement>('.packet')!;
+    const idle = root.querySelector<SVGGElement>('.idle')!;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // shortest path (breadth-first search)
+    function path(from: string, to: string): string[] {
+      const prev: Record<string, string | null> = { [from]: null };
+      const q = [from];
+      while (q.length) {
+        const cur = q.shift()!;
+        if (cur === to) break;
+        for (const n of adj[cur] || []) if (!(n in prev)) ((prev[n] = cur), q.push(n));
+      }
+      const out: string[] = [];
+      for (let c: string | null = to; c; c = prev[c] ?? null) out.unshift(c);
+      return out;
+    }
+
+    let navigating = false;
+    root.querySelectorAll<SVGAElement>('a.node').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+        if (reduce || !href || e.metaKey || e.ctrlKey || e.shiftKey || navigating) return;
+        e.preventDefault();
+        navigating = true;
+        const hops = path('you', a.dataset.node!);
+        a.classList.add('is-target');
+        const tl = gsap.timeline({ onComplete: () => (window.location.href = href) });
+        tl.set(packet, { x: pos.you.x, y: pos.you.y, opacity: 1 });
+        hops.slice(1).forEach((h) => tl.to(packet, { x: pos[h].x, y: pos[h].y, duration: 0.32, ease: 'power1.inOut' }));
+        tl.to(packet, { scale: 1.8, opacity: 0, duration: 0.2, transformOrigin: '50% 50%' });
+      });
+    });
+
+    // reset if the user comes back with the browser's back button
+    window.addEventListener('pageshow', () => {
+      navigating = false;
+      gsap.set(packet, { opacity: 0, scale: 1 });
+      root.querySelectorAll('.is-target').forEach((n) => n.classList.remove('is-target'));
+    });
+
+    // background chatter: small keepalive packets on random links
+    if (reduce) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    let visible = true;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(root);
+    // runs on GSAP's clock, so it pauses whenever animation frames pause
+    const spawn = () => {
+      gsap.delayedCall(0.9, spawn);
+      if (!visible || document.hidden || idle.childElementCount > 4) return;
+      const [a, b] = links[Math.floor(Math.random() * links.length)];
+      const [s, t] = Math.random() > 0.5 ? [pos[a], pos[b]] : [pos[b], pos[a]];
+      const dot = document.createElementNS(ns, 'circle');
+      dot.setAttribute('r', '3.5');
+      dot.setAttribute('class', 'keepalive');
+      dot.setAttribute('cx', String(s.x));
+      dot.setAttribute('cy', String(s.y));
+      idle.appendChild(dot);
+      gsap.to(dot, { attr: { cx: t.x, cy: t.y }, duration: 1.4, ease: 'none', onComplete: () => dot.remove() });
+    };
+    spawn();
+  });
+</script>
+
+<style>
+  .topo > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .link {
+    stroke: var(--line-2);
+    stroke-width: 2.5;
+  }
+  .light {
+    fill: var(--green);
+    filter: drop-shadow(0 0 4px var(--green));
+  }
+  .ifname {
+    fill: var(--faint);
+    font: 12px var(--mono);
+    text-anchor: middle;
+  }
+  .node {
+    color: var(--dim);
+    cursor: pointer;
+    text-decoration: none;
+    outline: none;
+  }
+  .node.is-you {
+    color: var(--blue);
+    cursor: default;
+  }
+  .halo {
+    fill: transparent;
+    stroke: transparent;
+    stroke-width: 1.5;
+    transition:
+      fill 0.2s,
+      stroke 0.2s;
+  }
+  a.node:hover,
+  a.node:focus-visible,
+  a.node.is-target {
+    color: var(--green);
+  }
+  a.node:hover .halo,
+  a.node:focus-visible .halo,
+  a.node.is-target .halo {
+    fill: rgba(78, 240, 138, 0.06);
+    stroke: var(--green-dim);
+    stroke-dasharray: 4 4;
+  }
+  a.node:focus-visible .halo {
+    stroke: var(--green);
+    stroke-dasharray: none;
+    stroke-width: 2.5;
+  }
+  .label,
+  .sub,
+  .ifname {
+    paint-order: stroke;
+    stroke: var(--bg);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+  }
+  .label {
+    fill: currentColor;
+    font: 600 15px var(--mono);
+  }
+  .sub {
+    fill: var(--faint);
+    font: 13px var(--sans);
+  }
+  .packet rect {
+    fill: var(--amber);
+    stroke: var(--bg);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px var(--amber));
+  }
+  .topo :global(.keepalive) {
+    fill: var(--green-dim);
+    opacity: 0.8;
+  }
+
+  .topo-list {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+  }
+  .topo-list a {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    column-gap: 0.75rem;
+    align-items: center;
+    padding: 0.7rem 0.9rem;
+    color: var(--text);
+    text-decoration: none;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .topo-list a:hover {
+    border-color: var(--green-dim);
+  }
+  .topo-list svg {
+    grid-row: span 2;
+    color: var(--green);
+  }
+  .topo-list .mono {
+    color: var(--green);
+    font-size: 0.9rem;
+  }
+  .sub-text {
+    color: var(--dim);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 640px) {
+    .topo > svg {
+      display: none !important;
+    }
+    .topo-list {
+      display: grid;
+    }
+  }
+</style>

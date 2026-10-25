@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import { profile } from '../data/profile';
+import { url } from '../lib/url';
+---
+
+<Base title="Not found">
+  <section class="section">
+    <div class="wrap mono nf">
+      <p><span class="host">{profile.hostname}#</span> show page</p>
+      <p class="err">{' '.repeat(profile.hostname.length + 7)}^</p>
+      <p class="err">% Invalid input detected at '^' marker.</p>
+      <h1>404: page not found</h1>
+      <p>That route isn't in the routing table. <a href={url()}>Go home</a> or press <kbd>`</kbd> and try <code>ssh labs</code>.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf p {
+    margin: 0 0 0.3rem;
+    white-space: pre;
+  }
+  .nf p:last-child {
+    white-space: normal;
+    margin-top: 1rem;
+    font-family: var(--sans);
+  }
+  .host {
+    color: var(--green);
+  }
+  .err {
+    color: var(--red);
+  }
+  h1 {
+    margin-top: 2rem;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+  }
+</style>

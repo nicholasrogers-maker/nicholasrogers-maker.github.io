@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import ShowOutput from '../components/ShowOutput.astro';
+import RoadmapTrace from '../components/RoadmapTrace.astro';
+import TrainingLog from '../components/TrainingLog.astro';
+import { showBytequest } from '../data/bytequest';
+import { getCerts } from '../lib/content';
+import { formatDate } from '../lib/url';
+
+const certs = await getCerts();
+const label = { earned: 'earned', 'in-progress': 'in progress', planned: 'planned' } as const;
+---
+
+<Base title="Certifications & roadmap" description="Certifications earned, in progress and planned, plus my career roadmap.">
+  <ShowOutput cmd="show certifications" title="Certifications" as="h1" lead="Earned, in progress and next on the list.">
+    <div class="cards">
+      {
+        certs.map((c) => (
+          <article class={`card cert cert-${c.data.status}`}>
+            <div class="cert-top">
+              <span class="meta">{c.data.issuer}</span>
+              <span class={`badge state-${c.data.status}`}>{label[c.data.status]}</span>
+            </div>
+            <h2 class="cert-name">{c.data.name}</h2>
+            {c.data.code && <p class="code mono">{c.data.code}</p>}
+            <p>{c.body}</p>
+            <p class="meta">
+              {c.data.earned ? `Earned ${formatDate(c.data.earned)}` : c.data.target ? `Target: ${c.data.target}` : ''}
+            </p>
+            {c.data.verifyUrl && (
+              <a href={c.data.verifyUrl} target="_blank" rel="noopener">
+                Verify credential →
+              </a>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </ShowOutput>
+
+  {
+    showBytequest && (
+      <ShowOutput
+        cmd="show bytequest detail"
+        title="Training log"
+        id="training"
+        lead="Every Byte Quest track, shown as switch ports: connected = finished, learning = in progress, notconnect = not started yet."
+      >
+        <TrainingLog />
+      </ShowOutput>
+    )
+  }
+
+  <ShowOutput cmd="traceroute career" title="Roadmap" lead="Where I'm heading, hop by hop. Each hop links to the labs that back it up." id="roadmap">
+    <RoadmapTrace />
+  </ShowOutput>
+</Base>
+
+<style>
+  .cert-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .cert-name {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  .code {
+    color: var(--green);
+    font-size: 0.85rem;
+  }
+  .cert-in-progress {
+    border-color: rgba(245, 185, 66, 0.4);
+  }
+  .cert-earned {
+    border-color: var(--green-dim);
+  }
+</style>

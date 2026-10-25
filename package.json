@@ -1,0 +1,16 @@
+{
+  "name": "netfolio",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "sync:bytequest": "node scripts/sync-bytequest.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.13.0",
+    "gsap": "^3.13.0"
+  }
+}

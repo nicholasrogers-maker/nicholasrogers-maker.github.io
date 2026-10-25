@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import ShowOutput from '../../components/ShowOutput.astro';
+import EntryCards from '../../components/EntryCards.astro';
+import { getLabs } from '../../lib/content';
+
+const labs = await getLabs();
+---
+
+<Base title="Labs & projects" description="Hands-on networking lab write-ups and projects.">
+  <ShowOutput
+    cmd="dir flash:/labs/"
+    title="Labs & projects"
+    as="h1"
+    lead="Hands-on write-ups: objective, topology, config, verification and what I learned."
+  >
+    <EntryCards items={labs} empty="No labs in flash: yet." />
+  </ShowOutput>
+</Base>

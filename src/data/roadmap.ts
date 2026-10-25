@@ -1,0 +1,57 @@
+// Your growth path. Shown as a traceroute on the Certifications page
+// and as a routing table in the CLI (`show ip route`, `traceroute career`).
+//
+// status: 'reached' | 'current' | 'planned'
+// Labs and posts link to a hop by setting `milestone: '<id>'` in their front matter.
+
+export type HopStatus = 'reached' | 'current' | 'planned';
+
+export const roadmap: {
+  id: string;
+  name: string;
+  status: HopStatus;
+  when: string;
+  summary: string;
+  goals: string[];
+}[] = [
+  {
+    id: 'foundations',
+    name: 'Foundations',
+    status: 'current',
+    when: '2026',
+    summary: 'Networking basics, subnetting, Linux, first Packet Tracer labs.',
+    goals: ['OSI & TCP/IP models', 'Subnetting at speed', 'Build a home lab', 'Linux command line'],
+  },
+  {
+    id: 'ccna',
+    name: 'CCNA 200-301',
+    status: 'planned',
+    when: '2027',
+    summary: 'Switching, routing, OSPF, ACLs, NAT, wireless and automation basics.',
+    goals: ['VLANs, trunking & STP', 'OSPFv2 single area', 'ACLs & NAT', 'Pass CCNA'],
+  },
+  {
+    id: 'security',
+    name: 'Security bridge',
+    status: 'planned',
+    when: '2027–28',
+    summary: 'Security+ or Cisco CyberOps Associate, TryHackMe / HTB paths, packet analysis.',
+    goals: ['Security+ or CyberOps', 'Wireshark investigations', 'CTF write-ups'],
+  },
+  {
+    id: 'specialise',
+    name: 'Specialise',
+    status: 'planned',
+    when: '2028+',
+    summary: 'CCNP Security / Enterprise, or a SOC path (BTL1, CySA+).',
+    goals: ['Pick a track', 'Advanced labs', 'First security role'],
+  },
+  {
+    id: 'automation',
+    name: 'Automation',
+    status: 'planned',
+    when: 'Ongoing',
+    summary: 'Python, Netmiko and Ansible to automate network tasks.',
+    goals: ['Python basics', 'Netmiko scripts', 'Ansible playbooks'],
+  },
+];

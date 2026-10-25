@@ -1,0 +1,243 @@
+---
+// Floating IOS-style CLI. Its data comes from the same files as the pages,
+// so commands like `show labs` always match what's on the site.
+import { profile, skills, experience, activeLinks } from '../data/profile';
+import { roadmap } from '../data/roadmap';
+import { getCerts, getLabs, getPosts } from '../lib/content';
+import { url } from '../lib/url';
+import { bytequest, showBytequest, featuredPaths, syncedLabel } from '../data/bytequest';
+
+const [certs, labs, posts] = await Promise.all([getCerts(), getLabs(), getPosts()]);
+
+const data = {
+  profile: {
+    name: profile.name,
+    hostname: profile.hostname,
+    title: profile.title,
+    tagline: profile.tagline,
+    location: profile.location,
+    currently: profile.currently,
+    openTo: profile.openTo,
+    email: profile.email,
+    bio: profile.bio,
+  },
+  links: [
+    ...activeLinks.map((l) => ({ id: l.id, label: l.label, url: l.url })),
+    { id: 'email', label: 'Email', url: `mailto:${profile.email}` },
+  ],
+  skills,
+  experience,
+  roadmap,
+  certs: certs.map((c) => ({
+    name: c.data.name,
+    code: c.data.code ?? '',
+    status: c.data.status,
+    when: c.data.earned ? c.data.earned.getFullYear().toString() : (c.data.target ?? ''),
+  })),
+  labs: labs.map((l) => ({ title: l.data.title, url: url(`labs/${l.id}/`), date: l.data.date.toISOString().slice(0, 10) })),
+  posts: posts.map((p) => ({ title: p.data.title, url: url(`blog/${p.id}/`), date: p.data.date.toISOString().slice(0, 10) })),
+  bytequest: showBytequest
+    ? {
+        synced: syncedLabel(),
+        xp: bytequest.xp,
+        level: bytequest.level,
+        lessons: bytequest.lessons,
+        streak: bytequest.streak,
+        recent: bytequest.recent,
+        badges: bytequest.badges,
+        featured: featuredPaths,
+        paths: bytequest.paths,
+        url: url('certifications/#training'),
+      }
+    : null,
+  pages: {
+    home: url(),
+    about: url('about/'),
+    certifications: url('certifications/'),
+    labs: url('labs/'),
+    security: url('security/'),
+    blog: url('blog/'),
+    contact: url('contact/'),
+  },
+};
+// Stop "</script>" inside content from breaking out of the JSON block.
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<button class="cli-fab" type="button" data-cli-toggle aria-label="Open command line" title="Open CLI (`)">
+  &gt;_
+</button>
+
+<div class="cli" id="cli" role="dialog" aria-modal="false" aria-label="Command line interface" hidden>
+  <div class="cli-titlebar">
+    <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="cli-title">console 0 · {profile.hostname}</span>
+    <button type="button" class="cli-close" data-cli-close aria-label="Close command line">×</button>
+  </div>
+  <div class="cli-out" id="cli-out" aria-live="polite"></div>
+  <form class="cli-line" id="cli-form" autocomplete="off">
+    <label for="cli-input" class="cli-prompt" id="cli-prompt">{profile.hostname}&gt;</label>
+    <input id="cli-input" class="cli-input" type="text" spellcheck="false" autocapitalize="off" aria-describedby="cli-help" />
+  </form>
+  <p id="cli-help" class="sr-only">Type a command and press Enter. Type a question mark for help. Tab completes.</p>
+</div>
+
+<script type="application/json" id="cli-data" set:html={json} />
+
+<script>
+  import { initTerminal } from '../scripts/terminal';
+  initTerminal();
+</script>
+
+<style>
+  .cli-fab {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 50;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid var(--green-dim);
+    background: var(--panel);
+    color: var(--green);
+    font: 600 1rem var(--mono);
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(78, 240, 138, 0.4);
+    animation: fab-pulse 3s infinite;
+  }
+  .cli-fab:hover {
+    border-color: var(--green);
+  }
+  @keyframes fab-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(78, 240, 138, 0.35);
+    }
+    70% {
+      box-shadow: 0 0 0 14px rgba(78, 240, 138, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(78, 240, 138, 0);
+    }
+  }
+
+  .cli {
+    position: fixed;
+    z-index: 60;
+    right: 16px;
+    bottom: 80px;
+    width: min(720px, calc(100vw - 32px));
+    height: min(460px, calc(100vh - 120px));
+    display: flex;
+    flex-direction: column;
+    background: #050806;
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    font: 0.85rem/1.5 var(--mono);
+    overflow: hidden;
+  }
+  .cli[hidden] {
+    display: none;
+  }
+  .cli-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.45rem 0.75rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    color: var(--dim);
+    font-size: 0.75rem;
+  }
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--line-2);
+  }
+  .dots i:first-child {
+    background: var(--red);
+  }
+  .dots i:nth-child(2) {
+    background: var(--amber);
+  }
+  .dots i:last-child {
+    background: var(--green);
+  }
+  .cli-title {
+    flex: 1;
+  }
+  .cli-close {
+    background: none;
+    border: 0;
+    color: var(--dim);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cli-close:hover {
+    color: var(--red);
+  }
+  .cli-out {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem 0.9rem 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+  }
+  .cli-line {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.2rem 0.9rem 0.8rem;
+  }
+  .cli-prompt {
+    color: var(--green);
+    white-space: nowrap;
+  }
+  .cli-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    font: inherit;
+    caret-color: var(--green);
+  }
+  .cli-out :global(.c-in) {
+    color: var(--text);
+  }
+  .cli-out :global(.c-in b) {
+    color: var(--green);
+    font-weight: 400;
+  }
+  .cli-out :global(.c-dim) {
+    color: var(--dim);
+  }
+  .cli-out :global(.c-err) {
+    color: var(--red);
+  }
+  .cli-out :global(.c-ok) {
+    color: var(--green);
+  }
+  .cli-out :global(.c-warn) {
+    color: var(--amber);
+  }
+  .cli-out :global(a) {
+    color: var(--blue);
+  }
+  @media (max-width: 600px) {
+    .cli {
+      right: 8px;
+      left: 8px;
+      bottom: 76px;
+      width: auto;
+    }
+  }
+</style>

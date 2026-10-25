@@ -1,0 +1,37 @@
+---
+// Card grid for labs and blog posts.
+import type { CollectionEntry } from 'astro:content';
+import { url, formatDate } from '../lib/url';
+
+interface Props {
+  items: (CollectionEntry<'labs'> | CollectionEntry<'blog'>)[];
+  empty?: string;
+}
+const { items, empty = 'Nothing here yet.' } = Astro.props;
+const href = (e: Props['items'][number]) => url(`${e.collection}/${e.id}/`);
+---
+
+{
+  items.length === 0 ? (
+    <p class="empty">% {empty}</p>
+  ) : (
+    <div class="cards">
+      {items.map((e) => (
+        <a class="card" href={href(e)}>
+          <span class="meta">
+            {formatDate(e.data.date)} · {e.collection === 'labs' ? 'lab' : 'post'}
+          </span>
+          <h3>{e.data.title}</h3>
+          <p>{e.data.summary}</p>
+          {e.data.tags.length > 0 && (
+            <ul class="tags">
+              {e.data.tags.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          )}
+        </a>
+      ))}
+    </div>
+  )
+}

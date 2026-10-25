@@ -1,0 +1,153 @@
+---
+import Base from '../layouts/Base.astro';
+import ShowOutput from '../components/ShowOutput.astro';
+import { profile, skills, experience } from '../data/profile';
+
+const ifState = (s: string) =>
+  s === 'up' ? { status: 'up', proto: 'up' } : s === 'learning' ? { status: 'up', proto: 'learning' } : { status: 'admin down', proto: 'down' };
+---
+
+<Base title="About" description={`About ${profile.name}: ${profile.title}.`}>
+  <ShowOutput cmd="show running-config | section about" title="About me" as="h1">
+    <div class="about-grid">
+      <div class="prose">
+        {profile.bio.map((p) => <p>{p}</p>)}
+      </div>
+      <pre class="panel cfg" aria-label="Summary as configuration"><span class="c">!</span>
+hostname {profile.hostname}
+<span class="c">!</span>
+interface Career0/0
+ description {profile.title}
+ location {profile.location}
+ focus {profile.tagline}
+ no shutdown
+<span class="c">!</span>
+end</pre>
+    </div>
+  </ShowOutput>
+
+  <ShowOutput cmd="show ip interface brief" title="Skills" lead="Status up = comfortable, learning = working on it now, admin down = on the roadmap.">
+    {
+      skills.map((g, gi) => (
+        <div class="panel skill-group">
+          <h3 class="mono">{g.group}</h3>
+          <div class="table-scroll">
+            <table class="ios-table">
+              <thead>
+                <tr>
+                  <th scope="col">Interface</th>
+                  <th scope="col">Skill</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Protocol</th>
+                </tr>
+              </thead>
+              <tbody>
+                {g.items.map((s, si) => {
+                  const st = ifState(s.status);
+                  return (
+                    <tr>
+                      <td class="dim">
+                        Gi{gi}/{si}
+                      </td>
+                      <td>{s.name}</td>
+                      <td class={`state-${s.status}`}>{st.status}</td>
+                      <td class={`state-${s.status}`}>{st.proto}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))
+    }
+  </ShowOutput>
+
+  <ShowOutput cmd="show logging" title="Experience & education">
+    <ol class="log">
+      {
+        experience.map((e) => (
+          <li>
+            <span class="ts mono">*{e.date}:</span>
+            <span class="fac mono">%{e.facility}:</span>
+            <div>
+              <strong>{e.title}</strong>
+              <p>{e.detail}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </ShowOutput>
+</Base>
+
+<style>
+  .about-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .cfg {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .cfg .c {
+    color: var(--faint);
+  }
+  .skill-group + .skill-group {
+    margin-top: 1rem;
+  }
+  .skill-group h3 {
+    color: var(--green);
+    font-size: 0.95rem;
+  }
+  .dim {
+    color: var(--faint);
+  }
+  .log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .log li {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+    padding: 1rem 1.25rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .log p {
+    margin: 0.2rem 0 0;
+    color: var(--dim);
+  }
+  .ts {
+    color: var(--faint);
+    font-size: 0.85rem;
+  }
+  .fac {
+    color: var(--amber);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 600px) {
+    .log li {
+      grid-template-columns: auto 1fr;
+    }
+    .log li > div {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

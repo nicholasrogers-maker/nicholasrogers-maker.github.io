@@ -1,0 +1,227 @@
+---
+// Hero animation: one HTTPS request travelling across a small network.
+// The packet's header "chips" show what's inside it: [ETH][IP][TCP][DATA].
+const stops = [
+  { x: 70, id: 'PC-A', icon: 'pc', layer: 'L7 → L1', text: 'Wraps the request: data → segment → packet → frame → bits on the wire.' },
+  { x: 230, id: 'SW1', icon: 'switch', layer: 'L2', text: 'Reads the destination MAC and forwards the frame out one port. Nothing is rewritten.' },
+  { x: 390, id: 'R1', icon: 'router', layer: 'L3', text: 'Strips the frame, checks its routing table, applies NAT and builds a new frame for the next hop.', rewrite: true },
+  { x: 560, id: 'INTERNET', icon: 'cloud', layer: 'L3', text: 'Every router on the way rewrites the Ethernet header. The IP header stays end to end.', rewrite: true },
+  { x: 730, id: 'FW', icon: 'firewall', layer: 'L3/L4', text: 'Checks the ACL: permit tcp any host 203.0.113.10 eq 443. Allowed through.', rewrite: true },
+  { x: 890, id: 'WEB-SRV', icon: 'server', layer: 'L1 → L7', text: 'Unwraps each header in reverse and hands the data to the web server. 200 OK.' },
+];
+const ifaces = ['Fa0/1', 'Gi0/1', 'Gi0/0', 'Gi0/1', 'Gi0/2', 'eth0'];
+---
+
+<figure class="pj" data-stops={JSON.stringify(stops)}>
+  <svg viewBox="0 0 960 200" role="img" aria-labelledby="pj-title">
+    <title id="pj-title">
+      Animation: a web request travels from a PC through a switch, router, the internet and a firewall to a web server.
+    </title>
+    <line x1="70" y1="100" x2="890" y2="100" class="pj-wire"></line>
+    <line x1="70" y1="100" x2="890" y2="100" class="pj-wire-flow"></line>
+    {
+      stops.map((s, i) => (
+        <g class="pj-dev" data-dev={i}>
+          <use href={`#ic-${s.icon}`} x={s.x - (s.icon === 'cloud' ? 40 : 30)} y={s.icon === 'cloud' ? 60 : 70} width={s.icon === 'cloud' ? 80 : 60} height={s.icon === 'cloud' ? 80 : 60} />
+          <text x={s.x} y="160" class="pj-name">{s.id}</text>
+          <text x={s.x} y="178" class="pj-if">{ifaces[i]}</text>
+        </g>
+      ))
+    }
+    <g class="pj-packet" transform="translate(70 0)">
+      <g transform="translate(0 46)">
+        <rect class="chip eth" x="-33" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="chip ip" x="-16" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="chip tcp" x="1" y="0" width="15" height="16" rx="2"></rect>
+        <rect class="chip data" x="18" y="0" width="15" height="16" rx="2"></rect>
+      </g>
+    </g>
+  </svg>
+  <figcaption class="pj-caption" aria-hidden="true">
+    <span class="pj-at">{stops[0].id}</span>
+    <span class="pj-layer">{stops[0].layer}</span>
+    <span class="pj-text">{stops[0].text}</span>
+  </figcaption>
+  <ul class="pj-legend" aria-hidden="true">
+    <li><i class="eth"></i>Ethernet (L2)</li>
+    <li><i class="ip"></i>IP (L3)</li>
+    <li><i class="tcp"></i>TCP (L4)</li>
+    <li><i class="data"></i>Data</li>
+  </ul>
+</figure>
+
+<script>
+  import { gsap } from 'gsap';
+
+  type Stop = { x: number; id: string; layer: string; text: string; rewrite?: boolean };
+
+  document.querySelectorAll<HTMLElement>('.pj').forEach((fig) => {
+    const stops: Stop[] = JSON.parse(fig.dataset.stops || '[]');
+    const packet = fig.querySelector('.pj-packet')!;
+    const chips = ['.data', '.tcp', '.ip', '.eth'].map((s) => fig.querySelector(`.chip${s}`)!);
+    const eth = fig.querySelector('.chip.eth')!;
+    const devs = fig.querySelectorAll('.pj-dev');
+    const at = fig.querySelector('.pj-at')!;
+    const layer = fig.querySelector('.pj-layer')!;
+    const text = fig.querySelector('.pj-text')!;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const caption = (i: number) => {
+      at.textContent = stops[i].id;
+      layer.textContent = stops[i].layer;
+      text.textContent = stops[i].text;
+      devs.forEach((d, j) => d.classList.toggle('is-active', j === i));
+    };
+
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, defaults: { ease: 'power1.inOut' } });
+    tl.set(packet, { x: stops[0].x, opacity: 1 })
+      .set(chips, { scaleY: 0, transformOrigin: '50% 100%' })
+      .call(caption, [0])
+      // encapsulate at the PC: data first, Ethernet last
+      .to(chips, { scaleY: 1, duration: 0.25, stagger: 0.3, ease: 'back.out(2)' }, '+=0.3')
+      .to({}, { duration: 0.8 });
+
+    for (let i = 1; i < stops.length; i++) {
+      tl.to(packet, { x: stops[i].x, duration: 1.1 }).call(caption, [i]);
+      if (stops[i].rewrite) {
+        // the router / firewall replaces the L2 header
+        tl.to(eth, { scaleY: 0, duration: 0.2 }).to(eth, { scaleY: 1, duration: 0.25, fill: '#ffffff' }).set(eth, { clearProps: 'fill' }, '+=0.3');
+      }
+      tl.to({}, { duration: i === stops.length - 1 ? 0.3 : 1.5 });
+    }
+    // decapsulate at the server: Ethernet first, data last
+    tl.to([...chips].reverse(), { scaleY: 0, duration: 0.2, stagger: 0.3 }).to({}, { duration: 1.8 }).to(packet, { opacity: 0, duration: 0.2 });
+
+    // pause when off screen
+    new IntersectionObserver(([e]) => (e.isIntersecting ? tl.play() : tl.pause())).observe(fig);
+  });
+</script>
+
+<style>
+  .pj {
+    margin: 0;
+    width: 100%;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .pj-wire {
+    stroke: var(--line-2);
+    stroke-width: 2;
+  }
+  .pj-wire-flow {
+    stroke: var(--green-dim);
+    stroke-width: 2;
+    stroke-dasharray: 2 14;
+    animation: flow 1.2s linear infinite;
+    opacity: 0.7;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+  .pj-dev {
+    color: var(--dim);
+    transition: color 0.3s;
+  }
+  .pj-dev.is-active {
+    color: var(--green);
+  }
+  .pj-name {
+    fill: currentColor;
+    font: 600 13px var(--mono);
+    text-anchor: middle;
+  }
+  .pj-if {
+    fill: var(--faint);
+    font: 11px var(--mono);
+    text-anchor: middle;
+  }
+  .chip {
+    stroke: var(--bg);
+    stroke-width: 1;
+  }
+  .chip.eth,
+  .pj-legend .eth {
+    fill: var(--pdu-l2);
+    background: var(--pdu-l2);
+  }
+  .chip.ip,
+  .pj-legend .ip {
+    fill: var(--pdu-l3);
+    background: var(--pdu-l3);
+  }
+  .chip.tcp,
+  .pj-legend .tcp {
+    fill: var(--pdu-l4);
+    background: var(--pdu-l4);
+  }
+  .chip.data,
+  .pj-legend .data {
+    fill: var(--pdu-data);
+    background: var(--pdu-data);
+  }
+  .pj-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+    min-height: 3.4em;
+    margin-top: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    font: 0.85rem/1.5 var(--mono);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+  }
+  .pj-at {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .pj-layer {
+    color: var(--amber);
+  }
+  .pj-text {
+    color: var(--dim);
+    flex-basis: 100%;
+  }
+  .pj-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 0;
+    font: 0.72rem var(--mono);
+    color: var(--faint);
+  }
+  /* phones: the SVG shrinks to ~35%, so enlarge the text and packet */
+  @media (max-width: 640px) {
+    .pj-name {
+      font-size: 26px;
+    }
+    .pj-if {
+      display: none;
+    }
+    .pj-name {
+      transform: translateY(14px);
+    }
+    .pj-packet > g {
+      transform: translate(0, 22px) scale(1.9);
+    }
+  }
+  .pj-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+</style>

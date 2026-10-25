@@ -1,0 +1,145 @@
+---
+// Router-style boot screen. Shown once per browser (first visit), skippable,
+// and never shown when the visitor prefers reduced motion.
+import { profile } from '../data/profile';
+const year = new Date().getFullYear();
+
+const lines = [
+  `System Bootstrap, Version ${year}.1, RELEASE SOFTWARE`,
+  `Copyright (c) ${year} by ${profile.name}`,
+  '',
+  'Initializing memory... 1048576K bytes OK',
+  'Readonly ROMMON initialized',
+  '',
+  'program load complete, entry point: 0x80008000, size: 0x1b340',
+  '%PROGRESS%',
+  '',
+  `${profile.hostname} IOS-style Software (NETFOLIO-K9), RELEASE SOFTWARE`,
+  'Loading flash:career.bin ... [OK]',
+  '',
+  '%LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up',
+  '%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up',
+  `%SYS-5-CONFIG_I: Configured from console by ${profile.name}`,
+  '%SYS-5-RESTART: System restarted --',
+  '',
+  'Press RETURN to get started!',
+];
+---
+
+<script is:inline>
+  // Runs before paint so returning visitors never see a flash of the boot screen.
+  try {
+    if (!localStorage.getItem('nf-booted') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('booting');
+    }
+  } catch (e) {}
+</script>
+
+<div class="boot" data-lines={JSON.stringify(lines)} aria-hidden="true">
+  <pre class="boot-out"></pre>
+  <button type="button" class="boot-skip">Skip ⏎</button>
+</div>
+
+<script>
+  const html = document.documentElement;
+  const boot = document.querySelector<HTMLElement>('.boot');
+
+  if (boot && html.classList.contains('booting')) {
+    const out = boot.querySelector('.boot-out')!;
+    const lines: string[] = JSON.parse(boot.dataset.lines || '[]');
+    let done = false;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      try {
+        localStorage.setItem('nf-booted', '1');
+      } catch {}
+      boot.classList.add('is-leaving');
+      setTimeout(() => html.classList.remove('booting'), 400);
+      window.removeEventListener('keydown', finish);
+    };
+
+    boot.querySelector('.boot-skip')!.addEventListener('click', finish);
+    boot.addEventListener('click', finish);
+    window.addEventListener('keydown', finish);
+
+    (async () => {
+      for (const line of lines) {
+        if (done) return;
+        if (line === '%PROGRESS%') {
+          const row = document.createElement('div');
+          row.textContent = 'Self decompressing the image : ';
+          out.appendChild(row);
+          for (let i = 0; i < 28 && !done; i++) {
+            row.textContent += '#';
+            await sleep(22);
+          }
+          row.textContent += ' [OK]';
+          continue;
+        }
+        const row = document.createElement('div');
+        row.textContent = line || ' ';
+        if (line.startsWith('%')) row.className = 'sys';
+        out.appendChild(row);
+        await sleep(line ? 90 : 40);
+      }
+      await sleep(900);
+      finish();
+    })();
+  }
+</script>
+
+<style is:global>
+  .boot {
+    display: none;
+  }
+  html.booting {
+    overflow: hidden;
+  }
+  html.booting .boot {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: clamp(16px, 4vw, 48px);
+    background: #000;
+    color: #c8e6d0;
+    cursor: pointer;
+    transition:
+      opacity 0.4s,
+      transform 0.4s;
+  }
+  .boot.is-leaving {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  .boot-out {
+    margin: 0;
+    font: 0.85rem/1.55 var(--mono);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .boot-out .sys {
+    color: var(--green);
+  }
+  .boot-skip {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    font: 0.8rem var(--mono);
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  .boot-skip:hover {
+    color: var(--green);
+    border-color: var(--green);
+  }
+</style>

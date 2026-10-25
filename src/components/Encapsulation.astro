@@ -1,0 +1,310 @@
+---
+// Scroll-driven encapsulation demo. As you scroll, each OSI layer adds its header,
+// the frame becomes bits, then the receiver strips the headers in reverse.
+// Without JS (or with reduced motion) it shows the finished frame and all steps as a list.
+import { profile } from '../data/profile';
+
+const layers = [
+  { n: 7, name: 'Application' },
+  { n: 6, name: 'Presentation' },
+  { n: 5, name: 'Session' },
+  { n: 4, name: 'Transport' },
+  { n: 3, name: 'Network' },
+  { n: 2, name: 'Data Link' },
+  { n: 1, name: 'Physical' },
+];
+const steps = [
+  { pdu: 'Data', layers: [7, 6, 5], text: 'The browser creates the request: GET /index.html over HTTPS.' },
+  { pdu: 'Segment', layers: [4], text: 'TCP adds source and destination ports (49152 → 443), sequence numbers and a checksum.' },
+  { pdu: 'Packet', layers: [3], text: 'IP adds source and destination addresses so routers know where it is going.' },
+  { pdu: 'Frame', layers: [2], text: 'Ethernet adds MAC addresses for the next hop, plus an FCS trailer to catch errors.' },
+  { pdu: 'Bits', layers: [1], text: 'The NIC turns the frame into signals on the wire: electrical, light or radio.' },
+  { pdu: 'Decapsulation', layers: [1, 2, 3, 4, 5, 6, 7], text: 'At the receiver each layer reads and removes its own header, in reverse, until the data reaches the app.' },
+];
+// deterministic "random" bits so the build output is stable
+const bits = Array.from({ length: 64 }, (_, i) => ((i * 7919) % 13) % 2).join('').replace(/(.{8})/g, '$1 ').trim();
+---
+
+<section class="encap" id="encapsulation" data-steps={JSON.stringify(steps)}>
+  <div class="encap-pin">
+    <div class="wrap">
+      <p class="prompt" aria-hidden="true">
+        <span class="host">{profile.hostname}#</span> <span class="cmd">debug ip packet detail</span>
+      </p>
+      <h2 class="section-title">How a packet is built</h2>
+      <p class="lead hint-scroll">Scroll to watch each layer wrap the data, then unwrap it at the other end.</p>
+
+      <div class="encap-grid">
+        <ol class="osi" aria-label="OSI model">
+          {
+            layers.map((l) => (
+              <li data-layer={l.n}>
+                <span class="num">L{l.n}</span> {l.name}
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="stage">
+          <div class="pdu-name mono"><span class="pdu-label">PDU:</span> <b>Frame</b></div>
+          <div class="pdu" aria-hidden="true">
+            <span class="h eth">Ethernet<small>dst MAC · src MAC</small></span>
+            <span class="h ip">IP<small>192.168.1.10 → 203.0.113.10</small></span>
+            <span class="h tcp">TCP<small>49152 → 443</small></span>
+            <span class="d">Data<small>GET /index.html</small></span>
+            <span class="h fcs">FCS<small>CRC</small></span>
+          </div>
+          <div class="bits mono" aria-hidden="true">{bits}</div>
+          <p class="caption mono" aria-live="off"></p>
+          <ol class="step-list">
+            {
+              steps.map((s) => (
+                <li>
+                  <b>{s.pdu}:</b> {s.text}
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  type Step = { pdu: string; layers: number[]; text: string };
+
+  const root = document.querySelector<HTMLElement>('.encap');
+  if (root) {
+    const steps: Step[] = JSON.parse(root.dataset.steps || '[]');
+    const q = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const pduName = q('.pdu-name b');
+    const caption = q('.caption');
+    const lis = root.querySelectorAll<HTMLElement>('.osi li');
+    const [tcp, ip, eth, fcs, bitsEl] = ['.tcp', '.ip', '.eth', '.fcs', '.bits'].map((s) => q(s));
+
+    const setStep = (i: number) => {
+      const s = steps[i];
+      pduName.textContent = s.pdu;
+      caption.textContent = s.text;
+      lis.forEach((li) => li.classList.toggle('is-on', s.layers.includes(Number(li.dataset.layer))));
+    };
+
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      root.classList.add('is-animated');
+      const hidden = { maxWidth: 0, opacity: 0, paddingLeft: 0, paddingRight: 0, borderWidth: 0 };
+      const shown = { maxWidth: 260, opacity: 1, paddingLeft: '0.7rem', paddingRight: '0.7rem', borderWidth: 1, duration: 1 };
+      gsap.set([tcp, ip, eth, fcs], hidden);
+      gsap.set(bitsEl, { opacity: 0, y: -8 });
+      setStep(0);
+
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      const marks: number[] = [0];
+      const hold = () => tl.to({}, { duration: 0.6 });
+      const mark = () => marks.push(tl.duration() - 0.5);
+
+      hold();
+      tl.to(tcp, shown); mark(); hold();
+      tl.to(ip, shown); mark(); hold();
+      tl.to([eth, fcs], shown); mark(); hold();
+      tl.to(bitsEl, { opacity: 1, y: 0, duration: 1 }); mark(); hold();
+      // receiver: strip in reverse
+      tl.to(bitsEl, { opacity: 0, duration: 0.5 }); mark();
+      tl.to([eth, fcs], { ...hidden, duration: 0.6 });
+      tl.to(ip, { ...hidden, duration: 0.6 });
+      tl.to(tcp, { ...hidden, duration: 0.6 });
+      hold();
+
+      let current = -1;
+      ScrollTrigger.create({
+        trigger: root,
+        pin: root.querySelector('.encap-pin'),
+        start: 'top top',
+        end: '+=2600',
+        scrub: 0.6,
+        animation: tl,
+        onUpdate() {
+          const t = tl.time();
+          let i = 0;
+          marks.forEach((m, k) => t >= m && (i = k));
+          if (i !== current) setStep((current = i));
+        },
+      });
+
+      return () => root.classList.remove('is-animated');
+    });
+  }
+</script>
+
+<style>
+  .encap {
+    position: relative;
+  }
+  .encap-pin {
+    padding-block: clamp(5rem, 10vw, 7rem) 3rem;
+    min-height: 100vh;
+  }
+  .encap-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+    align-items: start;
+  }
+  .osi {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+    font: 0.85rem var(--mono);
+  }
+  .osi li {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--faint);
+    transition:
+      color 0.25s,
+      border-color 0.25s,
+      background 0.25s;
+  }
+  .osi .num {
+    display: inline-block;
+    width: 2.2em;
+    color: inherit;
+  }
+  .osi li.is-on {
+    color: var(--bg);
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .stage {
+    min-width: 0;
+  }
+  .pdu-name {
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+  .pdu-name b {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .pdu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 3px;
+    font: 600 0.85rem var(--mono);
+  }
+  .pdu > span {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.8rem 0.7rem;
+    border: 1px solid;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--bg);
+  }
+  .pdu small {
+    font-weight: 400;
+    font-size: 0.7rem;
+    opacity: 0.85;
+  }
+  .eth,
+  .fcs {
+    background: var(--pdu-l2);
+    border-color: var(--pdu-l2);
+  }
+  .ip {
+    background: var(--pdu-l3);
+    border-color: var(--pdu-l3);
+  }
+  .tcp {
+    background: var(--pdu-l4);
+    border-color: var(--pdu-l4);
+  }
+  .d {
+    flex: 1;
+    min-width: 8rem;
+    background: var(--pdu-data);
+    border-color: var(--pdu-data);
+  }
+  .bits {
+    margin-top: 1rem;
+    color: var(--green);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    word-break: break-all;
+  }
+  .caption {
+    margin-top: 1.25rem;
+    min-height: 3em;
+    color: var(--text);
+    font-size: 0.9rem;
+    border-left: 3px solid var(--green);
+    padding-left: 0.9rem;
+  }
+  .step-list {
+    margin: 1.5rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--dim);
+    font-size: 0.95rem;
+  }
+  .step-list b {
+    color: var(--text);
+  }
+
+  /* animated mode: the list is replaced by the live caption */
+  .encap:not(.is-animated) .caption,
+  .encap:not(.is-animated) .hint-scroll {
+    display: none;
+  }
+  .encap.is-animated .step-list {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .encap-grid {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    .osi {
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .osi li {
+      padding: 0.4rem 0;
+      text-align: center;
+      font-size: 0;
+    }
+    .osi .num {
+      width: auto;
+      font-size: 0.75rem;
+    }
+    .pdu small {
+      display: none;
+    }
+    .pdu {
+      flex-wrap: nowrap;
+      font-size: 0.72rem;
+    }
+    .pdu > span {
+      padding: 0.6rem 0.45rem;
+    }
+    .d {
+      min-width: 3rem;
+    }
+    .encap-pin {
+      padding-top: 6.5rem;
+    }
+  }
+</style>

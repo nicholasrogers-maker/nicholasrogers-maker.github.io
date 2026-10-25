@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import ShowOutput from '../components/ShowOutput.astro';
+import EntryCards from '../components/EntryCards.astro';
+import { profile } from '../data/profile';
+import { getLabs, getPosts } from '../lib/content';
+
+const [labs, posts] = await Promise.all([getLabs(), getPosts()]);
+const items = [...labs, ...posts]
+  .filter((e) => e.data.track === 'security')
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const platforms = profile.links.filter((l) => ['tryhackme', 'hackthebox'].includes(l.id) && l.url);
+
+const acl = [
+  { seq: 10, action: 'permit', rule: 'packet analysis', note: 'Wireshark, tcpdump' },
+  { seq: 20, action: 'permit', rule: 'hardening', note: 'ACLs, port security, SSH-only management' },
+  { seq: 30, action: 'permit', rule: 'blue team practice', note: 'TryHackMe / Hack The Box labs' },
+  { seq: 40, action: 'permit', rule: 'vulnerability scanning', note: 'Nmap, in my own lab only' },
+  { seq: 50, action: 'deny', rule: 'any any', note: 'unauthorised testing' },
+];
+---
+
+<Base title="Security" description="Cyber security work: packet analysis, hardening, CTF write-ups.">
+  <ShowOutput
+    cmd="show access-lists SECURITY-FOCUS"
+    title="Security"
+    as="h1"
+    lead="Where networking meets cyber security. Write-ups from labs, CTFs and packet captures."
+  >
+    <div class="panel acl mono">
+      <div class="h">Extended IP access list SECURITY-FOCUS</div>
+      {
+        acl.map((a) => (
+          <div class="row">
+            {'    '}
+            {a.seq} <span class={a.action}>{a.action}</span> {a.rule.padEnd(24)} <span class="n">! {a.note}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    {
+      platforms.length > 0 && (
+        <div class="btn-row platforms">
+          {platforms.map((p) => (
+            <a class="btn ghost" href={p.url} target="_blank" rel="noopener">
+              {p.label} profile →
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </ShowOutput>
+
+  <ShowOutput cmd="show logging | include SEC" title="Security write-ups">
+    <EntryCards items={items} empty="No security write-ups yet. Set track: security in a lab or post to list it here." />
+  </ShowOutput>
+</Base>
+
+<style>
+  .acl {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .acl .row {
+    white-space: pre;
+  }
+  .acl .h {
+    color: var(--text);
+  }
+  .permit {
+    color: var(--green);
+  }
+  .deny {
+    color: var(--red);
+  }
+  .n {
+    color: var(--faint);
+  }
+  .platforms {
+    margin-top: 1.5rem;
+  }
+</style>

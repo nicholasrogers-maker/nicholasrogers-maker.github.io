@@ -1,0 +1,148 @@
+---
+import Base from '../layouts/Base.astro';
+import BootSequence from '../components/BootSequence.astro';
+import PacketJourney from '../components/PacketJourney.astro';
+import TopologyNav from '../components/TopologyNav.astro';
+import Encapsulation from '../components/Encapsulation.astro';
+import ShowOutput from '../components/ShowOutput.astro';
+import EntryCards from '../components/EntryCards.astro';
+import TrainingLog from '../components/TrainingLog.astro';
+import { showBytequest } from '../data/bytequest';
+import { profile } from '../data/profile';
+import { getLabs, getPosts, getCerts } from '../lib/content';
+import { url } from '../lib/url';
+
+const [labs, posts, certs] = await Promise.all([getLabs(), getPosts(), getCerts()]);
+const latest = [...labs, ...posts].sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
+const focusCert = certs.find((c) => c.data.status === 'in-progress');
+---
+
+<Base>
+  <BootSequence slot="before" />
+
+  <section class="hero">
+    <div class="wrap">
+      <p class="status mono">
+        <span class="led" aria-hidden="true"></span>
+        {profile.currently}
+      </p>
+      <h1>{profile.name}</h1>
+      <p class="title mono">{profile.title}</p>
+      <p class="lead">{profile.tagline}</p>
+      <div class="btn-row">
+        <a class="btn" href={url('labs/')}>show labs</a>
+        <a class="btn ghost" href={url('contact/')}>contact</a>
+        {profile.cvFile && (
+          <a class="btn ghost" href={url(profile.cvFile)} download>
+            download CV
+          </a>
+        )}
+        <button class="btn ghost" type="button" data-cli-toggle>&gt;_ open CLI</button>
+      </div>
+      <div class="hero-anim">
+        <PacketJourney />
+      </div>
+    </div>
+  </section>
+
+  <ShowOutput
+    cmd="show cdp neighbors"
+    title="Explore the network"
+    lead="Every device is a page. Pick one and a packet will take you there."
+    id="map"
+  >
+    <TopologyNav />
+  </ShowOutput>
+
+  <Encapsulation />
+
+  <ShowOutput cmd="show version | include Currently" title="Where I'm at">
+    <div class="status-grid">
+      <div class="panel">
+        <p class="k mono">Currently</p>
+        <p class="v">{profile.currently}</p>
+      </div>
+      <div class="panel">
+        <p class="k mono">Next certification</p>
+        <p class="v">{focusCert ? `${focusCert.data.code ?? focusCert.data.name} · target ${focusCert.data.target ?? 'TBC'}` : 'TBC'}</p>
+      </div>
+      <div class="panel">
+        <p class="k mono">Open to</p>
+        <p class="v">{profile.openTo}</p>
+      </div>
+    </div>
+  </ShowOutput>
+
+  {
+    showBytequest && (
+      <ShowOutput cmd="show bytequest" title="Training log" lead="Progress from Byte Quest, the learning app I built to study for the CCNA.">
+        <TrainingLog compact />
+      </ShowOutput>
+    )
+  }
+
+  <ShowOutput cmd="dir flash: | sort newest" title="Latest labs and notes">
+    <EntryCards items={latest} empty="No write-ups yet." />
+    <p class="more"><a href={url('labs/')}>All labs →</a> &nbsp; <a href={url('blog/')}>All posts →</a></p>
+  </ShowOutput>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 8vw, 6rem) 2rem;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--dim);
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s steps(1) infinite;
+  }
+  .hero h1 {
+    margin-bottom: 0.2em;
+  }
+  .title {
+    color: var(--green);
+    font-size: clamp(1rem, 2.4vw, 1.25rem);
+    margin-bottom: 0.5rem;
+  }
+  .hero .lead {
+    margin-bottom: 1.75rem;
+  }
+  .hero-anim {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+  }
+  .status-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+  .status-grid .k {
+    color: var(--faint);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.3rem;
+  }
+  .status-grid .v {
+    margin: 0;
+    font-weight: 500;
+  }
+  .more {
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+  }
+</style>

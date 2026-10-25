@@ -1,0 +1,347 @@
+---
+// Byte Quest progress, styled like `show interfaces status`.
+// compact: headline stats + one bar per featured path (home page).
+// full: every track of the featured paths, badges and other paths (certifications page).
+import { bytequest as bq, featuredPaths, pct, syncedLabel } from '../data/bytequest';
+import { url } from '../lib/url';
+
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+
+const featured = featuredPaths.map((id) => bq.paths.find((p) => p.id === id)).filter((p) => !!p);
+const others = bq.paths.filter((p) => !featuredPaths.includes(p.id) && p.done > 0);
+const statusText = { up: 'complete', learning: 'learning', down: 'not started' } as const;
+const lvlPct = pct(bq.level.into, bq.level.need);
+const nf = new Intl.NumberFormat('en-GB');
+---
+
+<div class="tlog">
+  <div class="stats">
+    <div class="stat level">
+      <span class="k">Level {bq.level.n}</span>
+      <b>{bq.level.title}</b>
+      <span class="bar" role="img" aria-label={`${bq.level.into} of ${bq.level.need} XP to next level`}><i style={`width:${lvlPct}%`}></i></span>
+      <span class="sub">{bq.level.into} / {bq.level.need} XP to level {bq.level.n + 1}</span>
+    </div>
+    <div class="stat"><span class="k">Total XP</span><b>{nf.format(bq.xp)}</b></div>
+    <div class="stat"><span class="k">Lessons cleared</span><b>{bq.lessons.done}</b><span class="sub">{bq.recent.days7} this week</span></div>
+    <div class="stat">
+      <span class="k">Streak</span><b>{bq.streak.current} day{bq.streak.current === 1 ? '' : 's'}</b><span class="sub">best {bq.streak.best}</span>
+    </div>
+    <div class="stat"><span class="k">Badges</span><b>{bq.badges.earned.length}</b><span class="sub">of {bq.badges.total}</span></div>
+  </div>
+
+  {
+    compact ? (
+      <ul class="path-bars">
+        {featured.map((p) => (
+          <li>
+            <span class="pname mono">{p.name}</span>
+            <span class="bar" role="img" aria-label={`${p.done} of ${p.total} lessons`}>
+              <i style={`width:${pct(p.done, p.total)}%`} />
+            </span>
+            <span class={`mono num state-${p.status === 'down' ? 'planned' : p.status === 'up' ? 'up' : 'learning'}`}>
+              {pct(p.done, p.total)}%
+            </span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <>
+        {featured.map((p, pi) => (
+          <details class="path panel" open={p.done > 0}>
+            <summary>
+              <span class="pname">{p.name}</span>
+              <span class={`badge state-${p.status === 'down' ? 'planned' : p.status === 'up' ? 'up' : 'learning'}`}>
+                {statusText[p.status]}
+              </span>
+              <span class="bar" role="img" aria-label={`${p.done} of ${p.total} lessons`}>
+                <i style={`width:${pct(p.done, p.total)}%`} />
+              </span>
+              <span class="mono num">
+                {p.done}/{p.total}
+              </span>
+            </summary>
+            <div class="table-scroll">
+              <table class="ios-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="port">Port</th>
+                    <th scope="col">Track</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Lessons</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {p.tracks.map((t, ti) => (
+                    <tr>
+                      <td class="port">
+                        Bq{pi}/{ti + 1}
+                      </td>
+                      <td>{t.name}</td>
+                      <td class={t.status === 'up' ? 'state-up' : t.status === 'learning' ? 'state-learning' : 'state-planned'}>
+                        {t.status === 'up' ? 'connected' : t.status === 'learning' ? 'learning' : 'notconnect'}
+                      </td>
+                      <td class="lessons">
+                        <span class="bar sm">
+                          <i style={`width:${pct(t.done, t.total)}%`} />
+                        </span>
+                        <span class="mono">
+                          {t.done}/{t.total}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        ))}
+
+        {others.length > 0 && (
+          <div class="others">
+            <h3 class="mono">Also training in</h3>
+            <ul class="path-bars">
+              {others.map((p) => (
+                <li>
+                  <span class="pname mono">{p.name}</span>
+                  <span class="bar">
+                    <i style={`width:${pct(p.done, p.total)}%`} />
+                  </span>
+                  <span class="mono num">
+                    {p.done}/{p.total}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {bq.badges.earned.length > 0 && (
+          <div class="badges">
+            <h3 class="mono">Badges earned</h3>
+            <ul>
+              {bq.badges.earned.map((b) => (
+                <li title={b.desc}>
+                  <b>{b.name}</b>
+                  <span>{b.desc}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  <p class="foot mono">
+    Source: Byte Quest, a learning app I built for CCNA, Linux and security practice · synced {syncedLabel()}
+    {compact && <a href={url('certifications/#training')}>full training log →</a>}
+  </p>
+</div>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 0.75rem;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    min-width: 0;
+  }
+  .stat.level {
+    grid-column: span 2;
+  }
+  @media (max-width: 520px) {
+    .stat.level {
+      grid-column: 1 / -1;
+    }
+  }
+  .k {
+    font: 0.72rem var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+  }
+  .stat b {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .level b {
+    color: var(--green);
+  }
+  .sub {
+    font-size: 0.8rem;
+    color: var(--dim);
+  }
+  .bar {
+    position: relative;
+    display: block;
+    height: 8px;
+    min-width: 60px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    min-width: 2px;
+    background: var(--green);
+    border-radius: 99px;
+  }
+  .bar i[style='width:0%'] {
+    display: none;
+  }
+  .level .bar {
+    margin: 0.4rem 0 0.2rem;
+  }
+  .level .bar i {
+    background: var(--amber);
+  }
+  .bar.sm {
+    height: 6px;
+    width: 80px;
+  }
+
+  .path-bars {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .path-bars li {
+    display: grid;
+    grid-template-columns: minmax(7rem, 11rem) 1fr 3.8rem;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .pname {
+    font-size: 0.88rem;
+  }
+  .num {
+    font-size: 0.82rem;
+    text-align: right;
+    color: var(--dim);
+  }
+
+  .path {
+    margin-top: 1rem;
+    padding: 0;
+  }
+  .path summary {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .path summary::-webkit-details-marker {
+    display: none;
+  }
+  .path summary::before {
+    content: '▸';
+    color: var(--faint);
+    margin-right: -0.4rem;
+  }
+  .path[open] summary::before {
+    content: '▾';
+  }
+  .path summary {
+    grid-template-columns: auto auto auto 1fr auto;
+  }
+  .path .pname {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .path .table-scroll {
+    padding: 0 1.1rem 0.9rem;
+  }
+  .port {
+    color: var(--faint);
+  }
+  .lessons {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .path summary {
+      grid-template-columns: auto 1fr auto;
+    }
+    .path summary .bar {
+      grid-column: 1 / -1;
+      order: 9;
+    }
+    .path summary .badge {
+      display: none;
+    }
+    .bar.sm {
+      display: none;
+    }
+    .port {
+      display: none;
+    }
+    .path .table-scroll {
+      padding: 0 0.75rem 0.75rem;
+    }
+  }
+
+  .others,
+  .badges {
+    margin-top: 1.75rem;
+  }
+  .others h3,
+  .badges h3 {
+    font-size: 0.9rem;
+    color: var(--green);
+  }
+  .badges ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  }
+  .badges li {
+    display: flex;
+    flex-direction: column;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(245, 185, 66, 0.35);
+    background: rgba(245, 185, 66, 0.06);
+    border-radius: var(--radius);
+  }
+  .badges b {
+    color: var(--amber);
+    font-size: 0.92rem;
+  }
+  .badges span {
+    font-size: 0.8rem;
+    color: var(--dim);
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin: 1.25rem 0 0;
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+</style>

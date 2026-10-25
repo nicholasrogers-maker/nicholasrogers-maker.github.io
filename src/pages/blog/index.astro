@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import ShowOutput from '../../components/ShowOutput.astro';
+import EntryCards from '../../components/EntryCards.astro';
+import { getPosts } from '../../lib/content';
+
+const posts = await getPosts();
+---
+
+<Base title="Blog & notes" description="Study notes, CCNA topics and write-ups.">
+  <ShowOutput cmd="dir flash:/blog/" title="Blog & study notes" as="h1" lead="Learning in public: CCNA topics, cheat sheets and write-ups.">
+    <EntryCards items={posts} empty="No posts in flash: yet." />
+  </ShowOutput>
+</Base>

@@ -1,0 +1,34 @@
+---
+// A section introduced by an IOS prompt line, e.g.  NET-PORTFOLIO# show certifications
+import { profile } from '../data/profile';
+
+interface Props {
+  cmd: string;
+  title?: string;
+  lead?: string;
+  id?: string;
+  as?: 'h1' | 'h2';
+  mode?: '#' | '>';
+}
+const { cmd, title, lead, id, as = 'h2', mode = '#' } = Astro.props;
+const Heading = as;
+---
+
+<section class="section show-output" id={id}>
+  <div class="wrap">
+    <p class="prompt" aria-hidden="true">
+      <span class="host">{profile.hostname}{mode}</span> <span class="cmd">{cmd}</span>
+    </p>
+    {title && <Heading class={as === 'h1' ? '' : 'section-title'}>{title}</Heading>}
+    {lead && <p class="lead">{lead}</p>}
+    <div class="show-body">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .show-body {
+    margin-top: 1.75rem;
+  }
+</style>
