@@ -1,26 +1,26 @@
 {
   "source": "Byte Quest",
-  "syncedAt": "2026-10-25T22:45:50.910Z",
-  "xp": 1675,
+  "syncedAt": "2026-10-26T21:42:06.008Z",
+  "xp": 1695,
   "level": {
     "n": 6,
     "title": "Hacker",
-    "into": 175,
+    "into": 195,
     "need": 600
   },
   "lessons": {
-    "done": 70,
+    "done": 71,
     "total": 721
   },
   "bosses": 4,
   "streak": {
-    "current": 8,
-    "best": 8,
-    "lastActive": "2026-10-25"
+    "current": 9,
+    "best": 9,
+    "lastActive": "2026-10-26"
   },
   "recent": {
-    "days7": 56,
-    "days30": 70
+    "days7": 55,
+    "days30": 71
   },
   "badges": {
     "earned": [
@@ -139,7 +139,7 @@
     {
       "id": "ccna",
       "name": "CCNA",
-      "done": 66,
+      "done": 67,
       "total": 340,
       "status": "learning",
       "tracks": [
@@ -153,7 +153,7 @@
         {
           "id": "ccna-core",
           "name": "CCNA Core · OSI, TCP/UDP & Subnetting",
-          "done": 27,
+          "done": 28,
           "total": 53,
           "status": "learning"
         },
