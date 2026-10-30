@@ -1,26 +1,26 @@
 {
   "source": "Byte Quest",
-  "syncedAt": "2026-10-29T22:34:11.720Z",
-  "xp": 2332,
+  "syncedAt": "2026-10-30T21:41:19.329Z",
+  "xp": 2431,
   "level": {
     "n": 7,
     "title": "Engineer",
-    "into": 232,
+    "into": 331,
     "need": 700
   },
   "lessons": {
-    "done": 92,
+    "done": 95,
     "total": 721
   },
   "bosses": 4,
   "streak": {
-    "current": 12,
-    "best": 12,
-    "lastActive": "2026-10-29"
+    "current": 13,
+    "best": 13,
+    "lastActive": "2026-10-30"
   },
   "recent": {
     "days7": 51,
-    "days30": 92
+    "days30": 95
   },
   "badges": {
     "earned": [
@@ -139,7 +139,7 @@
     {
       "id": "ccna",
       "name": "CCNA",
-      "done": 88,
+      "done": 91,
       "total": 340,
       "status": "learning",
       "tracks": [
@@ -181,7 +181,7 @@
         {
           "id": "ccna-ospf",
           "name": "CCNA 3b · OSPF",
-          "done": 22,
+          "done": 25,
           "total": 40,
           "status": "learning"
         },
